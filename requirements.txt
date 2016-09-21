@@ -1,0 +1,2 @@
+pycoin == 0.70
+pyelliptic>=1.5.7
