@@ -1,7 +1,6 @@
 import unittest
 from picopayments_client import util
 from picopayments_client import auth
-from picopayments_client import err
 
 
 class TestAuth(unittest.TestCase):
@@ -26,7 +25,7 @@ class TestAuth(unittest.TestCase):
             signed_json_data = auth.sign_json(data, util.random_wif())
             auth.verify_json(signed_json_data)
 
-        self.assertRaises(err.AuthPubkeyMissmatch, func)
+        self.assertRaises(auth.AuthPubkeyMissmatch, func)
 
     def test_invalid_signature(self):
 
@@ -35,7 +34,7 @@ class TestAuth(unittest.TestCase):
             pubkey = util.wif2pubkey(util.random_wif())
             auth.verify(pubkey, signature, b"bar")
 
-        self.assertRaises(err.InvalidSignature, func)
+        self.assertRaises(auth.InvalidAuthSignature, func)
 
 
 if __name__ == "__main__":

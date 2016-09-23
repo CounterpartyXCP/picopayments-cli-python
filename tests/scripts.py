@@ -1,7 +1,6 @@
 import json
 import unittest
 from picopayments_client import scripts
-from picopayments_client import err
 
 
 FIXTURES = json.load(open("tests/fixtures.json"))
@@ -27,7 +26,7 @@ class TestScripts(unittest.TestCase):
                 "deadbeef", "deadbeef", "deadbeef", "f483"
             )
             scripts.validate(reference_script_hex, deposit_script_hex)
-        self.assertRaises(err.InvalidScript, function)
+        self.assertRaises(scripts.InvalidScript, function)
 
     def test_validate_incorrect_length(self):
 
@@ -37,7 +36,7 @@ class TestScripts(unittest.TestCase):
                 "deadbeef", "deadbeef", "deadbeef", "deadbeef"
             )
             scripts.validate(reference_script_hex, deposit_script_hex)
-        self.assertRaises(err.InvalidScript, function)
+        self.assertRaises(scripts.InvalidScript, function)
 
     def test_get_spend_secret_bad_rawtx(self):
         bad_rawtx = FIXTURES["payout"]["bad_rawtx"]
@@ -123,14 +122,14 @@ class TestScripts(unittest.TestCase):
         def function():
             script_hex = FIXTURES["commit"]["script_hex_gt_max_sequence"]
             scripts.get_commit_delay_time(script_hex)
-        self.assertRaises(err.InvalidSequenceValue, function)
+        self.assertRaises(scripts.InvalidSequenceValue, function)
 
     def test_get_commit_delay_time_lt_min_sequence(self):
 
         def function():
             script_hex = FIXTURES["commit"]["script_hex_lt_min_sequence"]
             scripts.get_commit_delay_time(script_hex)
-        self.assertRaises(err.InvalidSequenceValue, function)
+        self.assertRaises(scripts.InvalidSequenceValue, function)
 
     def test_get_commit_delay_time_zero(self):
         payer_pubkey = FIXTURES["commit"]["payer_pubkey"]
@@ -189,7 +188,7 @@ class TestScripts(unittest.TestCase):
         def function():
             kwargs = FIXTURES["sign"]["finalize_commit_unsigned"]["input"]
             scripts.sign_finalize_commit(_get_tx_func, **kwargs)
-        self.assertRaises(err.InvalidPayerSignature, function)
+        self.assertRaises(scripts.InvalidPayerSignature, function)
 
     def test_sign_finalize_commit_bad_script(self):
 

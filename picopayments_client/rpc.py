@@ -6,7 +6,13 @@
 import json
 import requests
 from . import auth
-from . import err
+
+
+class RpcCallFailed(Exception):
+
+    def __init__(self, payload, response):
+        msg = "Rpc call failed! {0} -> {1}".format(payload, response)
+        super(RpcCallFailed, self).__init__(msg)
 
 
 def http_call(url, method, params={}, verify_ssl_cert=True):
@@ -19,7 +25,7 @@ def http_call(url, method, params={}, verify_ssl_cert=True):
     }
     response = requests.post(**kwargs).json()
     if "result" not in response:
-        raise err.RpcCallFailed(payload, response)
+        raise RpcCallFailed(payload, response)
     return response["result"]
 
 

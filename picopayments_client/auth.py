@@ -7,7 +7,24 @@ import copy
 import json
 import pyelliptic
 from . import util
-from . import err
+
+
+class AuthPubkeyMissmatch(Exception):
+
+    def __init__(self, expected, found):
+        msg = "Given pubkey {0} does not match signing pubkey {1}!".format(
+            found, expected
+        )
+        super(AuthPubkeyMissmatch, self).__init__(msg)
+
+
+class InvalidAuthSignature(Exception):
+
+    def __init__(self, pubkey, signature, data):
+        msg = "Invalid auth signature for pubkey {0}, signature {1}, data {2}"
+        super(InvalidAuthSignature, self).__init__(
+            msg.format(pubkey, signature, data)
+        )
 
 
 def sign(wif, data):
@@ -24,7 +41,7 @@ def verify(pubkey, signature, data):
     uncompressed_sec = util.decode_pubkey(pubkey)
     ecc = pyelliptic.ECC(curve="secp256k1", pubkey=uncompressed_sec)
     if not ecc.verify(util.h2b(signature), data):
-        raise err.InvalidSignature(pubkey, signature, data)
+        raise InvalidAuthSignature(pubkey, signature, data)
 
 
 def sign_json(json_data, wif):
@@ -32,7 +49,7 @@ def sign_json(json_data, wif):
     # add pubkey to json data if needed
     pubkey = util.wif2pubkey(wif)
     if "pubkey" in json_data and not json_data["pubkey"] == pubkey:
-        raise err.AuthPubkeyMissmatch(pubkey, json_data["pubkey"])
+        raise AuthPubkeyMissmatch(pubkey, json_data["pubkey"])
     else:
         json_data["pubkey"] = pubkey
 

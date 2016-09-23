@@ -16,7 +16,6 @@ from pycoin import encoding
 from pycoin.tx.script.check_signature import parse_signature_blob
 from pycoin.tx.script.der import UnexpectedDER
 from pycoin import ecdsa
-from . import err
 
 
 MAX_SEQUENCE = 0x0000FFFF
@@ -50,6 +49,36 @@ PAYOUT_SCRIPTSIG = "{sig} {spend_secret} OP_1"
 REVOKE_SCRIPTSIG = "{sig} {revoke_secret} OP_0"
 
 
+class InvalidScript(Exception):
+
+    def __init__(self, x):
+        msg = "Invalid script: '{0}'"
+        super(InvalidScript, self).__init__(msg.format(x))
+
+
+class InvalidPayerSignature(Exception):
+
+    def __init__(self):
+        msg = "Invalid or missing payer signature!"
+        super(InvalidPayerSignature, self).__init__(msg)
+
+
+class InvalidSequenceValue(Exception):
+
+    def __init__(self, x):
+        msg = "Invalid sequence value: {0}"
+        super(InvalidSequenceValue, self).__init__(msg.format(x))
+
+
+class InvalidSignature(Exception):
+
+    def __init__(self, pubkey, signature, data):
+        msg = "Invalid signature for pubkey {0}, signature {1}, data {2}"
+        super(InvalidSignature, self).__init__(
+            msg.format(pubkey, signature, data)
+        )
+
+
 def _get_word(script_bin, index):
     pc = 0
     i = 0
@@ -72,9 +101,9 @@ def validate(reference_script_hex, untrusted_script_hex):
         if r_data is not None and b2h(r_data) == "deadbeef":
             continue  # placeholder for expected variable
         if r_opcode != u_opcode or r_data != u_data:
-            raise err.InvalidScript(b2h(untrusted_script_bin))
+            raise InvalidScript(b2h(untrusted_script_bin))
     if r_pc != len(ref_script_bin) or u_pc != len(untrusted_script_bin):
-        raise err.InvalidScript(b2h(untrusted_script_bin))
+        raise InvalidScript(b2h(untrusted_script_bin))
 
 
 def validate_deposit_script(deposit_script_hex, validate_expire_time=True):
@@ -118,7 +147,7 @@ def _parse_sequence_value(opcode, data, disassembled):
     elif 80 < opcode < 97:  # OP_1 - OP_16
         value = opcode - 80
     if not (MAX_SEQUENCE >= value >= 0):
-        raise err.InvalidSequenceValue(disassembled)
+        raise InvalidSequenceValue(disassembled)
     return value
 
 
@@ -462,11 +491,11 @@ class _AbsDepositScript(ScriptType):
             valid = ecdsa.verify(ecdsa.generator_secp256k1, public_pair,
                                  sign_value, sig_pair)
             if not valid:
-                raise err.InvalidPayerSignature()
+                raise InvalidPayerSignature()
         except UnexpectedDER:
-            raise err.InvalidPayerSignature()
+            raise InvalidPayerSignature()
         except encoding.EncodingError:
-            raise err.InvalidPayerSignature()
+            raise InvalidPayerSignature()
 
         # sign
         private_key = hash160_lookup.get(encoding.hash160(self.payee_sec))

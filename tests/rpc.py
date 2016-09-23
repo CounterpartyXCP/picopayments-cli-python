@@ -1,7 +1,6 @@
 import unittest
 from tests.mock_hub import start
 from picopayments_client import rpc
-from picopayments_client import err
 
 
 class TestRpc(unittest.TestCase):
@@ -26,7 +25,7 @@ class TestRpc(unittest.TestCase):
             url = "https://127.0.0.1:16000/api/"
             api = rpc.API(auth_wif=auth_wif, url=url, verify_ssl_cert=False)
             api.non_existant()
-        self.assertRaises(err.RpcCallFailed, function)
+        self.assertRaises(rpc.RpcCallFailed, function)
 
 
 if __name__ == "__main__":
