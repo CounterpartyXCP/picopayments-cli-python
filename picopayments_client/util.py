@@ -1,16 +1,17 @@
 import os
 import pycoin
+from pycoin.tx import Tx
 from pycoin.serialize import b2h  # NOQA
 from pycoin.serialize import h2b  # NOQA
 from pycoin.serialize import b2h_rev  # NOQA
-from pycoin.encoding import hash160  # NOQA
+from pycoin.encoding import hash160
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.key import Key
 from pycoin.encoding import sec_to_public_pair, public_pair_to_sec, to_bytes_32
 
 
 def gettxid(rawtx):
-    tx = pycoin.tx.Tx.from_hex(rawtx)
+    tx = Tx.from_hex(rawtx)
     return b2h_rev(tx.hash())
 
 
@@ -30,19 +31,13 @@ def wif2address(wif):
     return Key.from_text(wif).address()
 
 
-def wif2secretexponent(wif):
-    return Key.from_text(wif).secret_exponent()
-
-
 def wif2privkey(wif):
-    key = Key.from_text(wif)
-    secret_exp = key.secret_exponent()
+    secret_exp = Key.from_text(wif).secret_exponent()
     return to_bytes_32(secret_exp)
 
 
 def wif2netcode(wif):
-    key = Key.from_text(wif)
-    return key.netcode()
+    return Key.from_text(wif).netcode()
 
 
 def decode_pubkey(pubkey):
@@ -58,8 +53,7 @@ def pubkey2address(pubkey, netcode="BTC"):
 
 def sec2address(sec, netcode="BTC"):
     prefix = pycoin.networks.address_prefix_for_netcode(netcode)
-    digest = pycoin.encoding.hash160(sec)
-    return pycoin.encoding.hash160_sec_to_bitcoin_address(digest, prefix)
+    return pycoin.encoding.hash160_sec_to_bitcoin_address(hash160(sec), prefix)
 
 
 def script2address(script_hex, netcode="BTC"):
@@ -70,7 +64,3 @@ def script2address(script_hex, netcode="BTC"):
 
 def hash160hex(hexdata):
     return b2h(hash160(h2b(hexdata)))
-
-
-def tosatoshis(btcamount):
-    return int(btcamount * 100000000)

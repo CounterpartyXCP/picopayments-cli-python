@@ -16,13 +16,7 @@ from pycoin import encoding
 from pycoin.tx.script.check_signature import parse_signature_blob
 from pycoin.tx.script.der import UnexpectedDER
 from pycoin import ecdsa
-
-
-class InvalidScript(Exception):
-
-    def __init__(self, x):
-        msg = "Invalid script: '{0}'"
-        super(InvalidScript, self).__init__(msg.format(x))
+from . import err
 
 
 MAX_SEQUENCE = 0x0000FFFF
@@ -78,12 +72,31 @@ def validate(reference_script_hex, untrusted_script_hex):
         if r_data is not None and b2h(r_data) == "deadbeef":
             continue  # placeholder for expected variable
         if r_opcode != u_opcode or r_data != u_data:
-            raise InvalidScript(b2h(untrusted_script_bin))
+            raise err.InvalidScript(b2h(untrusted_script_bin))
     if r_pc != len(ref_script_bin) or u_pc != len(untrusted_script_bin):
-        raise InvalidScript(b2h(untrusted_script_bin))
+        raise err.InvalidScript(b2h(untrusted_script_bin))
+
+
+def validate_deposit_script(deposit_script_hex, validate_expire_time=True):
+    reference_script_hex = compile_deposit_script(
+        "deadbeef", "deadbeef", "deadbeef", "deadbeef"
+    )
+    validate(reference_script_hex, deposit_script_hex)
+    if validate_expire_time:
+        get_deposit_expire_time(deposit_script_hex)  # has valid sequence value
+
+
+def validate_commit_script(commit_script_hex, validate_delay_time=True):
+    reference_script_hex = compile_commit_script(
+        "deadbeef", "deadbeef", "deadbeef", "deadbeef", "deadbeef"
+    )
+    validate(reference_script_hex, commit_script_hex)
+    if validate_delay_time:
+        get_commit_delay_time(commit_script_hex)  # has valid sequence value
 
 
 def get_spend_secret(payout_rawtx, commit_script_hex):
+    validate_commit_script(commit_script_hex)
     commit_script_bin = h2b(commit_script_hex)
     tx = Tx.from_hex(payout_rawtx)
     spend_script_bin = tx.txs_in[0].script
@@ -104,64 +117,63 @@ def _parse_sequence_value(opcode, data, disassembled):
         value = tools.int_from_script_bytes(data)
     elif 80 < opcode < 97:  # OP_1 - OP_16
         value = opcode - 80
-    else:
-        raise ValueError("Invalid expire time: {0}".format(disassembled))
-    if value > MAX_SEQUENCE:
-        msg = "Max expire time exceeded: {0} > {1}"
-        raise ValueError(msg.format(value, MAX_SEQUENCE))
+    if not (MAX_SEQUENCE >= value >= 0):
+        raise err.InvalidSequenceValue(disassembled)
     return value
 
 
 def get_commit_payer_pubkey(script_hex):
+    validate_commit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 13)
     return b2h(data)
 
 
 def get_commit_payee_pubkey(script_hex):
+    validate_commit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 7)
     return b2h(data)
 
 
 def get_commit_delay_time(script_hex):
+    validate_commit_script(script_hex, validate_delay_time=False)
     opcode, data, disassembled = _get_word(h2b(script_hex), 1)
     return _parse_sequence_value(opcode, data, disassembled)
 
 
 def get_commit_spend_secret_hash(script_hex):
+    validate_commit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 5)
     return b2h(data)
 
 
 def get_commit_revoke_secret_hash(script_hex):
+    validate_commit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 11)
     return b2h(data)
 
 
 def get_deposit_payer_pubkey(script_hex):
+    validate_deposit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 2)
     return b2h(data)
 
 
 def get_deposit_payee_pubkey(script_hex):
+    validate_deposit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 3)
     return b2h(data)
 
 
 def get_deposit_expire_time(script_hex):
+    validate_deposit_script(script_hex, validate_expire_time=False)
     opcode, data, disassembled = _get_word(h2b(script_hex), 14)
     return _parse_sequence_value(opcode, data, disassembled)
 
 
 def get_deposit_spend_secret_hash(script_hex):
+    validate_deposit_script(script_hex)
     opcode, data, disassembled = _get_word(h2b(script_hex), 9)
     return b2h(data)
-
-
-def compile_commit_scriptsig(payer_sig, payee_sig, deposit_script_hex):
-    sig_asm = COMMIT_SCRIPTSIG.format(
-        payer_sig=payer_sig, payee_sig=payee_sig
-    )
-    return b2h(tools.compile("{0} {1}".format(sig_asm, deposit_script_hex)))
 
 
 def compile_deposit_script(payer_pubkey, payee_pubkey,
@@ -208,6 +220,7 @@ def sign_deposit(get_tx_func, payer_wif, rawtx):
 
 
 def sign_created_commit(get_tx_func, payer_wif, rawtx, deposit_script_hex):
+    validate_deposit_script(deposit_script_hex)
     tx = _load_tx(get_tx_func, rawtx)
     expire_time = get_deposit_expire_time(deposit_script_hex)
     hash160_lookup, p2sh_lookup = _make_lookups(payer_wif, deposit_script_hex)
@@ -219,6 +232,7 @@ def sign_created_commit(get_tx_func, payer_wif, rawtx, deposit_script_hex):
 
 
 def sign_finalize_commit(get_tx_func, payee_wif, rawtx, deposit_script_hex):
+    validate_deposit_script(deposit_script_hex)
     tx = _load_tx(get_tx_func, rawtx)
     expire_time = get_deposit_expire_time(deposit_script_hex)
     hash160_lookup, p2sh_lookup = _make_lookups(payee_wif, deposit_script_hex)
@@ -231,6 +245,7 @@ def sign_finalize_commit(get_tx_func, payee_wif, rawtx, deposit_script_hex):
 
 def sign_revoke_recover(get_tx_func, payer_wif, rawtx,
                         commit_script_hex, revoke_secret):
+    validate_commit_script(commit_script_hex)
     return _sign_commit_recover(get_tx_func, payer_wif, rawtx,
                                 commit_script_hex, "revoke",
                                 None, revoke_secret)
@@ -238,6 +253,7 @@ def sign_revoke_recover(get_tx_func, payer_wif, rawtx,
 
 def sign_payout_recover(get_tx_func, payee_wif, rawtx,
                         commit_script_hex, spend_secret):
+    validate_commit_script(commit_script_hex)
     return _sign_commit_recover(get_tx_func, payee_wif, rawtx,
                                 commit_script_hex, "payout",
                                 spend_secret, None)
@@ -245,6 +261,7 @@ def sign_payout_recover(get_tx_func, payee_wif, rawtx,
 
 def sign_change_recover(get_tx_func, payer_wif, rawtx,
                         deposit_script_hex, spend_secret):
+    validate_deposit_script(deposit_script_hex)
     return _sign_deposit_recover(
         get_tx_func, payer_wif, rawtx,
         deposit_script_hex, "change", spend_secret
@@ -252,6 +269,7 @@ def sign_change_recover(get_tx_func, payer_wif, rawtx,
 
 
 def sign_expire_recover(get_tx_func, payer_wif, rawtx, deposit_script_hex):
+    validate_deposit_script(deposit_script_hex)
     return _sign_deposit_recover(
         get_tx_func, payer_wif, rawtx, deposit_script_hex, "expire", None
     )
@@ -327,7 +345,7 @@ class _AbsCommitScript(ScriptType):
                       payee_sec, payer_sec, revoke_secret_hash)
             assert(obj.script == script)
             return obj
-        raise ValueError("bad script")
+        raise ValueError("bad script")  # pragma: no cover
 
     def solve_payout(self, **kwargs):
         hash160_lookup = kwargs["hash160_lookup"]
@@ -361,10 +379,6 @@ class _AbsCommitScript(ScriptType):
         solve_method = solve_methods[kwargs["spend_type"]]
         return solve_method(**kwargs)
 
-    def __repr__(self):
-        script_asm = tools.disassemble(self.script)
-        return "<CommitScript: {0}".format(script_asm)
-
 
 class _AbsDepositScript(ScriptType):
 
@@ -390,7 +404,7 @@ class _AbsDepositScript(ScriptType):
             obj = cls(payer_sec, payee_sec, spend_secret_hash, expire_time)
             assert(obj.script == script)
             return obj
-        raise ValueError("bad script")
+        raise ValueError("bad script")  # pragma: no cover
 
     def solve_expire(self, **kwargs):
         hash160_lookup = kwargs["hash160_lookup"]
@@ -438,19 +452,21 @@ class _AbsDepositScript(ScriptType):
         existing_script = kwargs.get("existing_script")
 
         # validate payer sig
-        opcode, data, pc = tools.get_opcode(existing_script, 0)  # OP_0
-        opcode, payer_sig, pc = tools.get_opcode(existing_script, pc)
-        sig_pair, actual_signature_type = parse_signature_blob(payer_sig)
-        assert(signature_type == actual_signature_type)
         try:
+            opcode, data, pc = tools.get_opcode(existing_script, 0)  # OP_0
+            opcode, payer_sig, pc = tools.get_opcode(existing_script, pc)
+            sig_pair, actual_signature_type = parse_signature_blob(payer_sig)
+            assert(signature_type == actual_signature_type)
             public_pair = encoding.sec_to_public_pair(self.payer_sec)
             sig_pair, signature_type = parse_signature_blob(payer_sig)
             valid = ecdsa.verify(ecdsa.generator_secp256k1, public_pair,
                                  sign_value, sig_pair)
             if not valid:
-                raise Exception("Invalid payer public_pair!")
-        except (encoding.EncodingError, UnexpectedDER):
-            raise Exception("Invalid payer public_pair!")
+                raise err.InvalidPayerSignature()
+        except UnexpectedDER:
+            raise err.InvalidPayerSignature()
+        except encoding.EncodingError:
+            raise err.InvalidPayerSignature()
 
         # sign
         private_key = hash160_lookup.get(encoding.hash160(self.payee_sec))
@@ -473,10 +489,6 @@ class _AbsDepositScript(ScriptType):
         }
         solve_method = solve_methods[kwargs["spend_type"]]
         return solve_method(**kwargs)
-
-    def __repr__(self):
-        script_asm = tools.disassemble(self.script)
-        return "<DepositScript: {0}".format(script_asm)
 
 
 class _CommitScriptHandler():
