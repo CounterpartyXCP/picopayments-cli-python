@@ -9,6 +9,9 @@ import pyelliptic
 from . import util
 
 
+# FIXME add unittest for pyelliptic <-> pycoin compatibility
+
+
 class AuthPubkeyMissmatch(Exception):
 
     def __init__(self, expected, found):

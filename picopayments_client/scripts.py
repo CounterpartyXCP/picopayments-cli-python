@@ -49,6 +49,9 @@ PAYOUT_SCRIPTSIG = "{sig} {spend_secret} OP_1"
 REVOKE_SCRIPTSIG = "{sig} {revoke_secret} OP_0"
 
 
+# FIXME add simple functions to validate transactions
+
+
 class InvalidScript(Exception):
 
     def __init__(self, x):
@@ -237,6 +240,13 @@ def compile_commit_script(payer_pubkey, payee_pubkey, spend_secret_hash,
         delay_time=str(delay_time)
     )
     return b2h(tools.compile(script_asm))
+
+
+def compile_commit_scriptsig(payer_sig, payee_sig, deposit_script_hex):
+    sig_asm = COMMIT_SCRIPTSIG.format(
+        payer_sig=payer_sig, payee_sig=payee_sig
+    )
+    return b2h(tools.compile("{0} {1}".format(sig_asm, deposit_script_hex)))
 
 
 def sign_deposit(get_tx_func, payer_wif, rawtx):
