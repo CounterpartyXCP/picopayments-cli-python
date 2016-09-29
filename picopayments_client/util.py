@@ -64,3 +64,7 @@ def script2address(script_hex, netcode="BTC"):
 
 def hash160hex(hexdata):
     return b2h(hash160(h2b(hexdata)))
+
+
+def tosatoshis(btcamount):
+    return int(btcamount * 100000000)

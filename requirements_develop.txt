@@ -2,3 +2,4 @@ ipython
 pudb
 restview
 autopep8
+btctxstore
