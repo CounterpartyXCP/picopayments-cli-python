@@ -115,11 +115,13 @@ class Mph(Mpc):
         c2h_deposit_address = util.script2address(
             self.c2h_state["deposit_script"], netcode=netcode
         )
-        c2h_deposit = self.get_balances(c2h_deposit_address, [asset])[asset]
+        c2h_balances = self.get_balances(c2h_deposit_address, [asset])
+        c2h_deposit = c2h_balances.get(asset, 0)
         h2c_deposit_address = util.script2address(
             self.h2c_state["deposit_script"], netcode=netcode
         )
-        h2c_deposit = self.get_balances(h2c_deposit_address, [asset])[asset]
+        h2c_balances = self.get_balances(h2c_deposit_address, [asset])
+        h2c_deposit = h2c_balances.get(asset, 0)
         c2h_transferred = self.api.mpc_transferred_amount(state=self.c2h_state)
         h2c_transferred = self.api.mpc_transferred_amount(state=self.h2c_state)
         return {
@@ -132,6 +134,8 @@ class Mph(Mpc):
             "h2c_deposit_quantity": h2c_deposit,
             "c2h_transferred_quantity": c2h_transferred,
             "h2c_transferred_quantity": h2c_transferred,
+            # TODO c2h commits until expired
+            # TODO h2c commits until expired
         }
 
     def sync(self):
