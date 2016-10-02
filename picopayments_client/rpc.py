@@ -3,10 +3,15 @@
 # License: MIT (see LICENSE file)
 
 
+import time
 import json
 import requests
 from requests.auth import HTTPBasicAuth
+from collections import defaultdict
 from . import auth
+
+
+method_call_time = defaultdict(float)
 
 
 class RpcCallFailed(Exception):
@@ -27,7 +32,12 @@ def http_call(url, method, params={}, verify_ssl_cert=True,
     }
     if username and password:
         kwargs["auth"] = HTTPBasicAuth(username, password)
+
+    global method_call_time
+    begin = time.time()
     response = requests.post(**kwargs).json()
+    method_call_time[method] += (time.time() - begin)
+
     if "result" not in response:
         raise RpcCallFailed(payload, response)
     return response["result"]

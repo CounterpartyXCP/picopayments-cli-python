@@ -106,10 +106,10 @@ class Mph(Mpc):
         assert(self.is_connected())
         asset = self.asset
         netcode = util.wif2netcode(self.client_wif)
-        h2c_expired = self.api.mpc_deposit_expired(
+        h2c_deposit_ttl = self.api.mpc_deposit_ttl(
             state=self.h2c_state, clearance=clearance
         )
-        c2h_expired = self.api.mpc_deposit_expired(
+        c2h_deposit_ttl = self.api.mpc_deposit_ttl(
             state=self.c2h_state, clearance=clearance
         )
         c2h_deposit_address = util.script2address(
@@ -127,8 +127,8 @@ class Mph(Mpc):
         return {
             "asset": asset,
             "netcode": netcode,
-            "c2h_expired": c2h_expired,
-            "h2c_expired": h2c_expired,
+            "c2h_deposit_ttl": c2h_deposit_ttl,
+            "h2c_deposit_ttl": h2c_deposit_ttl,
             "balance": c2h_deposit + h2c_transferred - c2h_transferred,
             "c2h_deposit_quantity": c2h_deposit,
             "h2c_deposit_quantity": h2c_deposit,
@@ -197,8 +197,8 @@ class Mph(Mpc):
         c2h = self.c2h_state
         h2c = self.h2c_state
         return (
-            self.api.mpc_deposit_expired(state=c2h, clearance=clearance) or
-            self.api.mpc_deposit_expired(state=h2c, clearance=clearance) or
+            self.api.mpc_deposit_ttl(state=c2h, clearance=clearance) == 0 or
+            self.api.mpc_deposit_ttl(state=h2c, clearance=clearance) == 0 or
             self.api.mpc_get_published_commits(state=c2h) or
             self.api.mpc_get_published_commits(state=h2c)
         )
