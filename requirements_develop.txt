@@ -1,4 +1,5 @@
 ipython
+Sphinx
 pudb
 restview
 autopep8

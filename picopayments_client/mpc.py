@@ -19,6 +19,9 @@ class Mpc(object):
     def get_balances(self, address, assets=None):
         """TODO doc string"""
 
+        # FIXME curruntly includes unconfirmed
+        # FIXME add unconfirmed flag
+
         # get asset balances
         entries = self.api.get_balances(filters=[
             {"field": "address", "op": "==", "value": address},
@@ -28,6 +31,11 @@ class Mpc(object):
             if assets and entrie["asset"] not in assets:
                 continue
             result[entrie["asset"]] = entrie["quantity"]
+
+        # fill in zero balance assets
+        if assets is not None:
+            for asset in assets:
+                result[asset] = result.get(asset, 0)
 
         # get btc balance
         if assets is None or "BTC" in assets:
@@ -166,7 +174,7 @@ class Mpc(object):
         signed_rawtx = scripts.sign_expire_recover(
             self.get_rawtx, wif, expire_rawtx, deposit_script
         )
-        return self.publish(self, signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx, dryrun=dryrun)
 
     def finalize_commit(self, get_wif_func, state, dryrun=False):
         commit = self.api.mpc_highest_commit(state=state)
@@ -184,22 +192,22 @@ class Mpc(object):
     def full_duplex_recover_funds(self, get_wif_func, get_secret_func,
                                   recv_state, send_state, dryrun=False):
         txids = []
-        for ptx in self.api.mpc_payouts(state=recv_state):
-            txids += self.recover_payout(
+        for payout_tx in self.api.mpc_payouts(state=recv_state):
+            txids.append(self.recover_payout(
                 get_wif_func=get_wif_func, get_secret_func=get_secret_func,
-                dryrun=dryrun, **ptx
-            )
+                dryrun=dryrun, **payout_tx
+            ))
         rtxs = self.api.mpc_recoverables(state=send_state)
-        for rtx in rtxs["revoke"]:
-            txids += self.recover_revoke(
-                get_wif_func=get_wif_func, dryrun=dryrun, **ptx
-            )
-        for ctx in rtxs["change"]:
-            txids += self.recover_change(
-                get_wif_func=get_wif_func, dryrun=dryrun, **ptx
-            )
-        for etx in rtxs["expire"]:
-            txids += self.recover_expired(
-                get_wif_func=get_wif_func, dryrun=dryrun, **ptx
-            )
+        for revoke_tx in rtxs["revoke"]:
+            txids.append(self.recover_revoke(
+                get_wif_func=get_wif_func, dryrun=dryrun, **revoke_tx
+            ))
+        for change_tx in rtxs["change"]:
+            txids.append(self.recover_change(
+                get_wif_func=get_wif_func, dryrun=dryrun, **change_tx
+            ))
+        for expire_tx in rtxs["expire"]:
+            txids.append(self.recover_expired(
+                get_wif_func=get_wif_func, dryrun=dryrun, **expire_tx
+            ))
         return txids

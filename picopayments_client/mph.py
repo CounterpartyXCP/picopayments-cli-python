@@ -5,6 +5,7 @@
 
 import os
 from . import util
+from . import scripts
 from .rpc import API
 from .mpc import Mpc
 
@@ -106,36 +107,42 @@ class Mph(Mpc):
         assert(self.is_connected())
         asset = self.asset
         netcode = util.wif2netcode(self.client_wif)
-        h2c_deposit_ttl = self.api.mpc_deposit_ttl(
-            state=self.h2c_state, clearance=clearance
+
+        c2h = self.c2h_state
+        c2h_ttl = self.api.mpc_deposit_ttl(
+            state=c2h, clearance=clearance
         )
-        c2h_deposit_ttl = self.api.mpc_deposit_ttl(
-            state=self.c2h_state, clearance=clearance
-        )
-        c2h_deposit_address = util.script2address(
-            self.c2h_state["deposit_script"], netcode=netcode
-        )
-        c2h_balances = self.get_balances(c2h_deposit_address, [asset])
+        c2h_script = c2h["deposit_script"]
+        c2h_deposit_expire_time = scripts.get_deposit_expire_time(c2h_script)
+        c2h_deposit_address = util.script2address(c2h_script, netcode=netcode)
+        c2h_balances = self.get_balances(c2h_deposit_address, ["BTC", asset])
         c2h_deposit = c2h_balances.get(asset, 0)
-        h2c_deposit_address = util.script2address(
-            self.h2c_state["deposit_script"], netcode=netcode
-        )
-        h2c_balances = self.get_balances(h2c_deposit_address, [asset])
-        h2c_deposit = h2c_balances.get(asset, 0)
-        c2h_transferred = self.api.mpc_transferred_amount(state=self.c2h_state)
+        c2h_transferred = self.api.mpc_transferred_amount(state=c2h)
+
+        h2c = self.h2c_state
+        h2c_ttl = self.api.mpc_deposit_ttl(state=h2c, clearance=clearance)
+        h2c_script = h2c["deposit_script"]
+        h2c_deposit_expire_time = scripts.get_deposit_expire_time(h2c_script)
+        h2c_deposit_address = util.script2address(h2c_script, netcode=netcode)
+        h2c_balances = self.get_balances(h2c_deposit_address, ["BTC", asset])
+        # h2c_deposit = h2c_balances.get(asset, 0)
         h2c_transferred = self.api.mpc_transferred_amount(state=self.h2c_state)
+
         return {
             "asset": asset,
-            "netcode": netcode,
-            "c2h_deposit_ttl": c2h_deposit_ttl,
-            "h2c_deposit_ttl": h2c_deposit_ttl,
+            "handle": self.handle,
             "balance": c2h_deposit + h2c_transferred - c2h_transferred,
-            "c2h_deposit_quantity": c2h_deposit,
-            "h2c_deposit_quantity": h2c_deposit,
+            "c2h_deposit_address": c2h_deposit_address,
+            "c2h_deposit_ttl": c2h_ttl,
+            "c2h_deposit_balances": c2h_balances,
+            "c2h_deposit_expire_time": c2h_deposit_expire_time,
             "c2h_transferred_quantity": c2h_transferred,
+            "h2c_deposit_address": h2c_deposit_address,
+            "h2c_deposit_ttl": h2c_ttl,
+            "h2c_deposit_balances": h2c_balances,
+            "h2c_deposit_expire_time": h2c_deposit_expire_time,
             "h2c_transferred_quantity": h2c_transferred,
-            # TODO c2h commits until expired
-            # TODO h2c commits until expired
+            "netcode": netcode,
         }
 
     def sync(self):
@@ -209,7 +216,7 @@ class Mph(Mpc):
         # close channel if needed
         h2c_closed = self.api.mpc_get_published_commits(state=self.h2c_state)
         if self.is_closed(clearance=clearance) and not h2c_closed:
-            txid = self.close(self, dryrun=dryrun)
+            txid = self.close(dryrun=dryrun)
             if txid:
                 txids.append(txid)
 
