@@ -4,8 +4,9 @@
 
 
 import os
-from . import util
-from . import scripts
+from micropayment_core import util
+from micropayment_core import keys
+from micropayment_core import scripts
 from .rpc import API
 from .mpc import Mpc
 
@@ -72,7 +73,7 @@ class Mph(Mpc):
         self.asset = asset
         self.client_wif = self.api.auth_wif
         self.own_url = own_url
-        self.client_pubkey = util.wif2pubkey(self.client_wif)
+        self.client_pubkey = keys.pubkey_from_wif(self.client_wif)
         self.c2h_deposit_expire_time = expire_time
         self.c2h_deposit_quantity = quantity
         next_revoke_hash = self._create_initial_secrets()
@@ -106,7 +107,7 @@ class Mph(Mpc):
     def get_status(self, clearance=6):
         assert(self.is_connected())
         asset = self.asset
-        netcode = util.wif2netcode(self.client_wif)
+        netcode = keys.netcode_from_wif(self.client_wif)
 
         c2h = self.c2h_state
         c2h_ttl = self.api.mpc_deposit_ttl(
@@ -114,7 +115,7 @@ class Mph(Mpc):
         )
         c2h_script = c2h["deposit_script"]
         c2h_deposit_expire_time = scripts.get_deposit_expire_time(c2h_script)
-        c2h_deposit_address = util.script2address(c2h_script, netcode=netcode)
+        c2h_deposit_address = util.script_address(c2h_script, netcode=netcode)
         c2h_balances = self.get_balances(c2h_deposit_address, ["BTC", asset])
         c2h_deposit = c2h_balances.get(asset, 0)
         c2h_transferred = self.api.mpc_transferred_amount(state=c2h)
@@ -123,7 +124,7 @@ class Mph(Mpc):
         h2c_ttl = self.api.mpc_deposit_ttl(state=h2c, clearance=clearance)
         h2c_script = h2c["deposit_script"]
         h2c_deposit_expire_time = scripts.get_deposit_expire_time(h2c_script)
-        h2c_deposit_address = util.script2address(h2c_script, netcode=netcode)
+        h2c_deposit_address = util.script_address(h2c_script, netcode=netcode)
         h2c_balances = self.get_balances(h2c_deposit_address, ["BTC", asset])
         # h2c_deposit = h2c_balances.get(asset, 0)
         h2c_transferred = self.api.mpc_transferred_amount(state=self.h2c_state)

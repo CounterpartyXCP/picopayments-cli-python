@@ -3,8 +3,9 @@
 # License: MIT (see LICENSE file)
 
 
-from . import util
-from . import scripts
+from micropayment_core import util
+from micropayment_core import keys
+from micropayment_core import scripts
 
 
 class Mpc(object):
@@ -21,6 +22,7 @@ class Mpc(object):
 
         # FIXME curruntly includes unconfirmed
         # FIXME add unconfirmed flag
+        # https://github.com/CounterpartyXCP/counterblock/blob/master/counterblock/lib/blockchain.py#L108
 
         # get asset balances
         entries = self.api.get_balances(filters=[
@@ -40,7 +42,7 @@ class Mpc(object):
         # get btc balance
         if assets is None or "BTC" in assets:
             utxos = self.api.get_unspent_txouts(address=address)
-            balance = sum(map(lambda u: util.tosatoshis(u["amount"]), utxos))
+            balance = sum(map(lambda u: util.to_satoshis(u["amount"]), utxos))
             result["BTC"] = balance
 
         return result
@@ -50,7 +52,7 @@ class Mpc(object):
 
         # replace source wif with address
         wif = kwargs.pop("source")
-        kwargs["source"] = util.wif2address(wif)
+        kwargs["source"] = keys.address_from_wif(wif)
 
         # create, sign and publish transaction
         unsigned_rawtx = self.api.create_send(**kwargs)

@@ -5,11 +5,7 @@
 
 import copy
 import json
-import pyelliptic
-from . import util
-
-
-# FIXME add unittest for pyelliptic <-> pycoin compatibility
+from micropayment_core import keys
 
 
 class AuthPubkeyMissmatch(Exception):
@@ -21,36 +17,10 @@ class AuthPubkeyMissmatch(Exception):
         super(AuthPubkeyMissmatch, self).__init__(msg)
 
 
-class InvalidAuthSignature(Exception):
-
-    def __init__(self, pubkey, signature, data):
-        msg = "Invalid auth signature for pubkey {0}, signature {1}, data {2}"
-        super(InvalidAuthSignature, self).__init__(
-            msg.format(pubkey, signature, data)
-        )
-
-
-def sign(wif, data):
-    privkey = util.wif2privkey(wif)
-    pubkey = util.wif2pubkey(wif)
-    uncompressed_sec = util.decode_pubkey(pubkey)
-    ecc = pyelliptic.ECC(
-        curve="secp256k1", pubkey=uncompressed_sec, privkey=privkey
-    )
-    return util.b2h(ecc.sign(data))
-
-
-def verify(pubkey, signature, data):
-    uncompressed_sec = util.decode_pubkey(pubkey)
-    ecc = pyelliptic.ECC(curve="secp256k1", pubkey=uncompressed_sec)
-    if not ecc.verify(util.h2b(signature), data):
-        raise InvalidAuthSignature(pubkey, signature, data)
-
-
-def sign_json(json_data, wif):
+def sign_json(json_data, privkey):
 
     # add pubkey to json data if needed
-    pubkey = util.wif2pubkey(wif)
+    pubkey = keys.pubkey_from_privkey(privkey)
     if "pubkey" in json_data and not json_data["pubkey"] == pubkey:
         raise AuthPubkeyMissmatch(pubkey, json_data["pubkey"])
     else:
@@ -58,7 +28,7 @@ def sign_json(json_data, wif):
 
     # sign serialized data (keys must be ordered!)
     data = json.dumps(json_data, sort_keys=True)
-    signature = sign(wif, data)
+    signature = keys.sign_sha256(privkey, data.encode("utf-8"))
 
     # add signature to json data
     json_data["signature"] = signature
@@ -71,4 +41,4 @@ def verify_json(json_data):
     pubkey = json_data["pubkey"]
     signature = json_data.pop("signature")
     data = json.dumps(json_data, sort_keys=True)
-    verify(pubkey, signature, data)
+    return keys.verify_sha256(pubkey, signature, data.encode("utf-8"))
