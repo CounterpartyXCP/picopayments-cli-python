@@ -3,13 +3,11 @@
 # License: MIT (see LICENSE file)
 
 
-import re
 import time
 import json
 import requests
 from requests.auth import HTTPBasicAuth
 from collections import defaultdict
-from six.moves.urllib.parse import urljoin
 from . import auth
 
 
@@ -23,8 +21,8 @@ class JsonRpcCallFailed(Exception):
         super(JsonRpcCallFailed, self).__init__(msg)
 
 
-def _jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
-                  username=None, password=None):
+def jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
+                 username=None, password=None):
     payload = {"method": method, "params": params, "jsonrpc": "2.0", "id": 0}
     kwargs = {
         "url": url,
@@ -45,14 +43,14 @@ def _jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
     return response["result"]
 
 
-def _auth_jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
-                       privkey=None, username=None, password=None):
+def auth_jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
+                      privkey=None, username=None, password=None):
 
     if privkey:
         params = auth.sign_json(params, privkey)
 
-    result = _jsonrpc_call(url, method, params=params, username=username,
-                           password=password, verify_ssl_cert=verify_ssl_cert)
+    result = jsonrpc_call(url, method, params=params, username=username,
+                          password=password, verify_ssl_cert=verify_ssl_cert)
 
     if privkey:
         auth.verify_json(result)
@@ -79,7 +77,7 @@ class JsonRpc(object):
 
         def wrapper(**kwargs):
             privkey = self.privkey if name in auth_methods else None
-            return _auth_jsonrpc_call(
+            return auth_jsonrpc_call(
                 url=self.url,
                 method=name,
                 params=kwargs,
