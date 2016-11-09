@@ -7,7 +7,7 @@ import os
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
-from .rpc import API
+from .rpc import JsonRpc
 from .mpc import Mpc
 
 
@@ -39,7 +39,7 @@ class Mph(Mpc):
             setattr(self, attr, None)
 
     @classmethod
-    def deserialize(cls, data, api_cls=API):
+    def deserialize(cls, data, api_cls=JsonRpc):
         """TODO doc string"""
         obj = cls(api_cls(**data["hub"]))
         for attr in obj._SERIALIZABLE_ATTRS:
