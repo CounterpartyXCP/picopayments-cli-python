@@ -66,7 +66,7 @@ class Mph(Mpc):
         return bool(self.handle)
 
     def connect(self, quantity, expire_time=1024, asset="XCP",
-                delay_time=2, own_url=None, dryrun=False):
+                delay_time=2, own_url=None):
         """TODO doc string"""
 
         assert(not self.is_connected())
@@ -82,7 +82,7 @@ class Mph(Mpc):
         c2h_deposit_rawtx = self._make_deposit()
         h2c_deposit_script = self._exchange_deposit_scripts(next_revoke_hash)
         signed_rawtx = self.sign(c2h_deposit_rawtx, self.client_wif)
-        c2h_deposit_txid = self.publish(signed_rawtx, dryrun=dryrun)
+        c2h_deposit_txid = self.publish(signed_rawtx)
         self._set_initial_h2c_state(h2c_deposit_script)
         self._add_to_commits_requested(next_revoke_hash)
         self.payments_sent = []
@@ -196,10 +196,8 @@ class Mph(Mpc):
 
         return receive_payments
 
-    def close(self, dryrun=False):
-        return self.finalize_commit(
-            self._get_wif, self.h2c_state, dryrun=dryrun
-        )
+    def close(self):
+        return self.finalize_commit(self._get_wif, self.h2c_state)
 
     def is_closed(self, clearance=6):
         c2h = self.c2h_state
@@ -207,24 +205,23 @@ class Mph(Mpc):
         return (
             self.api.mpc_deposit_ttl(state=c2h, clearance=clearance) == 0 or
             self.api.mpc_deposit_ttl(state=h2c, clearance=clearance) == 0 or
-            self.api.mpc_get_published_commits(state=c2h) or
-            self.api.mpc_get_published_commits(state=h2c)
+            self.api.mpc_published_commits(state=c2h) or
+            self.api.mpc_published_commits(state=h2c)
         )
 
-    def update(self, dryrun=False, clearance=6):
+    def update(self, clearance=6):
         txids = []
 
         # close channel if needed
-        h2c_closed = self.api.mpc_get_published_commits(state=self.h2c_state)
+        h2c_closed = self.api.mpc_published_commits(state=self.h2c_state)
         if self.is_closed(clearance=clearance) and not h2c_closed:
-            txid = self.close(dryrun=dryrun)
+            txid = self.close()
             if txid:
                 txids.append(txid)
 
         # recover funds if possible
         txids += self.full_duplex_recover_funds(
-            self._get_wif, self.secrets.get, self.h2c_state,
-            self.c2h_state, dryrun=dryrun
+            self._get_wif, self.secrets.get, self.h2c_state, self.c2h_state,
         )
 
         return txids

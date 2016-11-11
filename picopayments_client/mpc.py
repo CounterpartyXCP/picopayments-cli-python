@@ -47,7 +47,7 @@ class Mpc(object):
 
         return result
 
-    def block_send(self, dryrun=False, **kwargs):
+    def block_send(self, **kwargs):
         """TODO doc string"""
 
         # replace source wif with address
@@ -57,17 +57,15 @@ class Mpc(object):
         # create, sign and publish transaction
         unsigned_rawtx = self.api.create_send(**kwargs)
         signed_rawtx = self.sign(unsigned_rawtx, wif)
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
     def sign(self, unsigned_rawtx, wif):
         """TODO doc string"""
 
         return scripts.sign_deposit(self.get_rawtx, wif, unsigned_rawtx)
 
-    def publish(self, rawtx, dryrun=False):
-        if dryrun:
-            return util.gettxid(rawtx)
-        return self.api.sendrawtransaction(tx_hex=rawtx)  # pragma: no cover
+    def publish(self, rawtx):
+        return self.api.sendrawtransaction(tx_hex=rawtx)
 
     def create_signed_commit(self, wif, state, quantity,
                              revoke_secret_hash, delay_time):
@@ -141,7 +139,7 @@ class Mpc(object):
         }
 
     def recover_payout(self, get_wif_func, get_secret_func, payout_rawtx,
-                       commit_script, dryrun=False):
+                       commit_script):
         pubkey = scripts.get_commit_payee_pubkey(commit_script)
         wif = get_wif_func(pubkey=pubkey)
         spend_secret_hash = scripts.get_commit_spend_secret_hash(commit_script)
@@ -149,36 +147,35 @@ class Mpc(object):
         signed_rawtx = scripts.sign_payout_recover(
             self.get_rawtx, wif, payout_rawtx, commit_script, spend_secret
         )
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
     def recover_revoked(self, get_wif_func, revoke_rawtx, commit_script,
-                        revoke_secret, dryrun=False):
+                        revoke_secret):
         pubkey = scripts.get_commit_payer_pubkey(commit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_revoke_recover(
             self.get_rawtx, wif, revoke_rawtx, commit_script, revoke_secret
         )
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
     def recover_change(self, get_wif_func, change_rawtx, deposit_script,
-                       spend_secret, dryrun=False):
+                       spend_secret):
         pubkey = scripts.get_deposit_payer_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_change_recover(
             self.get_rawtx, wif, change_rawtx, deposit_script, spend_secret
         )
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
-    def recover_expired(self, get_wif_func, expire_rawtx,
-                        deposit_script, dryrun=False):
+    def recover_expired(self, get_wif_func, expire_rawtx, deposit_script):
         pubkey = scripts.get_deposit_payer_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_expire_recover(
             self.get_rawtx, wif, expire_rawtx, deposit_script
         )
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
-    def finalize_commit(self, get_wif_func, state, dryrun=False):
+    def finalize_commit(self, get_wif_func, state):
         commit = self.api.mpc_highest_commit(state=state)
         if commit is None:
             return None
@@ -189,27 +186,28 @@ class Mpc(object):
         signed_rawtx = scripts.sign_finalize_commit(
             self.get_rawtx, wif, rawtx, deposit_script
         )
-        return self.publish(signed_rawtx, dryrun=dryrun)
+        return self.publish(signed_rawtx)
 
     def full_duplex_recover_funds(self, get_wif_func, get_secret_func,
-                                  recv_state, send_state, dryrun=False):
+                                  recv_state, send_state):
         txids = []
         for payout_tx in self.api.mpc_payouts(state=recv_state):
             txids.append(self.recover_payout(
-                get_wif_func=get_wif_func, get_secret_func=get_secret_func,
-                dryrun=dryrun, **payout_tx
+                get_wif_func=get_wif_func,
+                get_secret_func=get_secret_func,
+                **payout_tx
             ))
         rtxs = self.api.mpc_recoverables(state=send_state)
         for revoke_tx in rtxs["revoke"]:
             txids.append(self.recover_revoke(
-                get_wif_func=get_wif_func, dryrun=dryrun, **revoke_tx
+                get_wif_func=get_wif_func, **revoke_tx
             ))
         for change_tx in rtxs["change"]:
             txids.append(self.recover_change(
-                get_wif_func=get_wif_func, dryrun=dryrun, **change_tx
+                get_wif_func=get_wif_func, **change_tx
             ))
         for expire_tx in rtxs["expire"]:
             txids.append(self.recover_expired(
-                get_wif_func=get_wif_func, dryrun=dryrun, **expire_tx
+                get_wif_func=get_wif_func, **expire_tx
             ))
         return txids
