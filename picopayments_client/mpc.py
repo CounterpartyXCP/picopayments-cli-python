@@ -179,12 +179,11 @@ class Mpc(object):
         commit = self.api.mpc_highest_commit(state=state)
         if commit is None:
             return None
-        deposit_script = commit["deposit_script"]
-        rawtx = commit["commit_rawtx"]
+        deposit_script = state["deposit_script"]
         pubkey = scripts.get_deposit_payee_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_finalize_commit(
-            self.get_rawtx, wif, rawtx, deposit_script
+            self.get_rawtx, wif, commit["rawtx"], deposit_script
         )
         return self.publish(signed_rawtx)
 
