@@ -110,9 +110,7 @@ class Mph(Mpc):
         netcode = keys.netcode_from_wif(self.client_wif)
 
         c2h = self.c2h_state
-        c2h_ttl = self.api.mpc_deposit_ttl(
-            state=c2h, clearance=clearance
-        )
+        c2h_ttl = self.api.mpc_deposit_ttl(state=c2h, clearance=clearance)
         c2h_script = c2h["deposit_script"]
         c2h_deposit_expire_time = scripts.get_deposit_expire_time(c2h_script)
         c2h_deposit_address = util.script_address(c2h_script, netcode=netcode)

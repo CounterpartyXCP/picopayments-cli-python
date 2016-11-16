@@ -117,16 +117,19 @@ class Mpc(object):
             revokes += [get_secret_func(h) for h in revoke_hashes]
 
             # revoke commits for secrets that will be published
-            recv_state = self.api.mpc_revoke_all(state=recv_state,
-                                                 secrets=revokes)
+            if revokes:
+                recv_state = self.api.mpc_revoke_all(
+                    state=recv_state, secrets=revokes
+                )
 
         # create commit to send the rest
         recv_moved_after = self.api.mpc_transferred_amount(state=recv_state)
         recv_revoked_quantity = recv_moved_before - recv_moved_after
         send_quantity = quantity - recv_revoked_quantity
+        send_moved_before = self.api.mpc_transferred_amount(state=send_state)
         if send_quantity > 0:
             result = self.create_signed_commit(
-                wif, send_state, send_quantity,
+                wif, send_state, send_moved_before + send_quantity,
                 send_next_revoke_secret_hash,
                 send_commit_delay_time
             )
