@@ -192,14 +192,25 @@ class Mpc(object):
 
     def full_duplex_recover_funds(self, get_wif_func, get_secret_func,
                                   recv_state, send_state):
+
+        # get send spend secret if known
+        send_spend_secret_hash = scripts.get_deposit_spend_secret_hash(
+            send_state["deposit_script"]
+        )
+        send_spend_secret = get_secret_func(send_spend_secret_hash)
+
         txids = []
+
+        # get payouts
         for payout_tx in self.api.mpc_payouts(state=recv_state):
             txids.append(self.recover_payout(
                 get_wif_func=get_wif_func,
                 get_secret_func=get_secret_func,
                 **payout_tx
             ))
-        rtxs = self.api.mpc_recoverables(state=send_state)
+
+        rtxs = self.api.mpc_recoverables(state=send_state,
+                                         spend_secret=send_spend_secret)
         for revoke_tx in rtxs["revoke"]:
             txids.append(self.recover_revoke(
                 get_wif_func=get_wif_func, **revoke_tx

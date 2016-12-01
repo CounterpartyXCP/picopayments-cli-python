@@ -195,7 +195,29 @@ class Mph(Mpc):
         return receive_payments
 
     def close(self):
-        return self.finalize_commit(self._get_wif, self.h2c_state)
+        txids = []
+        commit_txid = self.finalize_commit(self._get_wif, self.h2c_state)
+        if commit_txid is not None:
+            txids.append(commit_txid)
+
+        # get h2c spend secret if no commits for channel
+        h2c_spend_secret = None
+        if len(self.h2c_state["commits_active"]) == 0:
+            deposit_script = self.h2c_state["deposit_script"]
+            spend_hash = scripts.get_deposit_spend_secret_hash(deposit_script)
+            h2c_spend_secret = self.secrets[spend_hash]
+
+        # tell hub to close the channel
+        result = self.api.mph_close(handle=self.handle,
+                                    spend_secret=h2c_spend_secret)
+
+        # remember c2h spend secret if given
+        c2h_spend_secret = result["spend_secret"]
+        if c2h_spend_secret:
+            secret_hash = util.hash160hex(c2h_spend_secret)
+            self.secrets[secret_hash] = c2h_spend_secret
+
+        return txids
 
     def is_closed(self, clearance=6):
         c2h = self.c2h_state
@@ -219,7 +241,7 @@ class Mph(Mpc):
 
         # recover funds if possible
         txids += self.full_duplex_recover_funds(
-            self._get_wif, self.secrets.get, self.h2c_state, self.c2h_state,
+            self._get_wif, self.secrets.get, self.h2c_state, self.c2h_state
         )
 
         return txids

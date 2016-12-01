@@ -70,7 +70,9 @@ class JsonRpc(object):
 
     def __getattribute__(self, name):
         props = ["url", "privkey", "verify_ssl_cert", "username", "password"]
-        auth_methods = ["mph_request", "mph_deposit", "mph_sync", "test_auth"]
+        auth_methods = [
+            "mph_request", "mph_deposit", "mph_sync", "mph_close", "test_auth"
+        ]
 
         if name in props:
             return object.__getattribute__(self, name)
