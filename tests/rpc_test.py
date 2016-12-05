@@ -1,5 +1,5 @@
 import unittest
-from tests.mock_hub import start
+from tests.mock_rpc_server import start
 from micropayment_core import keys
 from picopayments_client import rpc
 
@@ -18,7 +18,7 @@ class TestRpc(unittest.TestCase):
         url = "https://127.0.0.1:16000/api/"
         api = rpc.JsonRpc(privkey=privkey, url=url, verify_ssl_cert=False,
                           username="username", password="password")
-        result = api.test_auth()
+        result = api.mph_sync()
         self.assertIn("foo", result)
 
     def test_api_call_non_existant_method(self):

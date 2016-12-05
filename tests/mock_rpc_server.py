@@ -8,7 +8,7 @@ from micropayment_core import keys
 
 
 @dispatcher.add_method
-def test_auth(**kwargs):
+def mph_sync(**kwargs):
     auth.verify_json(kwargs)
     auth_wif = "cT9pEqELRn5v67hJmmmYQmPnsuezJeup7CqQiJBUTZnLLoxdydAb"
     auth_privkey = keys.wif_to_privkey(auth_wif)
@@ -16,7 +16,7 @@ def test_auth(**kwargs):
 
 
 @Request.application
-def application(request):
+def _application(request):
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
     return Response(response.json, mimetype='application/json')
 
@@ -24,7 +24,7 @@ def application(request):
 def start():
     process = Process(
         target=run_simple,
-        args=('127.0.0.1', 16000, application),
+        args=('127.0.0.1', 16000, _application),
         kwargs=dict(processes=1, ssl_context='adhoc')
     )
     process.start()
@@ -34,6 +34,6 @@ def start():
 
 if __name__ == "__main__":
     run_simple(
-        *('127.0.0.1', 16000, application),
+        *('127.0.0.1', 16000, _application),
         **dict(processes=1, ssl_context='adhoc')
     )

@@ -10,7 +10,7 @@ exec(open('picopayments_client/version.py').read())  # load __version__
 
 setup(
     name='picopayments_client',
-    scripts=[],
+    scripts=['picopayments_client/bin/picopayments-client'],
     description="Micropayment hub client for counterparty assets.",
     long_description=open("README.rst").read(),
     keywords="storj, counterparty, micropayment, hub",

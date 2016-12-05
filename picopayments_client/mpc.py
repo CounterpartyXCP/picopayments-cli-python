@@ -18,11 +18,7 @@ class Mpc(object):
         return self.api.getrawtransaction(tx_hash=txid)
 
     def get_balances(self, address, assets=None):
-        """TODO doc string"""
-
-        # FIXME curruntly includes unconfirmed
-        # FIXME add unconfirmed flag
-        # https://github.com/CounterpartyXCP/counterblock/blob/master/counterblock/lib/blockchain.py#L108
+        """Get confirmed balances for given assets."""
 
         # get asset balances
         entries = self.api.get_balances(filters=[
@@ -41,7 +37,9 @@ class Mpc(object):
 
         # get btc balance
         if assets is None or "BTC" in assets:
-            utxos = self.api.get_unspent_txouts(address=address)
+            utxos = self.api.get_unspent_txouts(
+                address=address, unconfirmed=False
+            )
             balance = sum(map(lambda u: util.to_satoshis(u["amount"]), utxos))
             result["BTC"] = balance
 
@@ -224,3 +222,44 @@ class Mpc(object):
                 get_wif_func=get_wif_func, **expire_tx
             ))
         return txids
+
+    def full_duplex_channel_status(self, handle, netcode, send_state,
+                                   recv_state, clearance=6):
+        assert(send_state["asset"] == recv_state["asset"])
+        asset = send_state["asset"]
+
+        send_ttl = self.api.mpc_deposit_ttl(state=send_state,
+                                            clearance=clearance)
+        send_script = send_state["deposit_script"]
+        send_deposit_expire_time = scripts.get_deposit_expire_time(send_script)
+        send_deposit_address = util.script_address(send_script, netcode=netcode)
+        send_balances = self.get_balances(send_deposit_address, ["BTC", asset])
+        send_deposit = send_balances.get(asset, 0)
+        send_transferred = self.api.mpc_transferred_amount(state=send_state)
+
+        recv_ttl = self.api.mpc_deposit_ttl(state=recv_state,
+                                            clearance=clearance)
+        recv_script = recv_state["deposit_script"]
+        recv_deposit_expire_time = scripts.get_deposit_expire_time(recv_script)
+        recv_deposit_address = util.script_address(recv_script, netcode=netcode)
+        recv_balances = self.get_balances(recv_deposit_address, ["BTC", asset])
+        recv_deposit = recv_balances.get(asset, 0)
+        recv_transferred = self.api.mpc_transferred_amount(state=recv_state)
+
+        return {
+            "asset": asset,
+            "handle": handle,
+            "netcode": netcode,
+            "send_balance": send_deposit + recv_transferred - send_transferred,
+            "send_deposit_address": send_deposit_address,
+            "send_deposit_ttl": send_ttl,
+            "send_deposit_balances": send_balances,
+            "send_deposit_expire_time": send_deposit_expire_time,
+            "send_transferred_quantity": send_transferred,
+            "recv_balance": recv_deposit + send_transferred - recv_transferred,
+            "recv_deposit_address": recv_deposit_address,
+            "recv_deposit_ttl": recv_ttl,
+            "recv_deposit_balances": recv_balances,
+            "recv_deposit_expire_time": recv_deposit_expire_time,
+            "recv_transferred_quantity": recv_transferred,
+        }

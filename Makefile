@@ -5,6 +5,7 @@ PY := env/bin/python
 PEP8 := env/bin/pep8
 AUTOPEP8 := env/bin/autopep8
 COVERAGE := env/bin/coverage
+PYTEST := env/bin/py.test
 USE_WHEELS := 0
 ifeq ($(USE_WHEELS), 0)
   WHEEL_INSTALL_ARGS := # void
@@ -12,7 +13,6 @@ else
   WHEEL_INSTALL_ARGS := --use-wheel --no-index --find-links=$(WHEEL_DIR)
 endif
 export VIRTUALENV_PATH=env/bin/
-export COUNTERPARTY_URL=http://127.0.0.1:14000/api/
 
 
 help:
@@ -84,8 +84,10 @@ test: setup
 	$(AUTOPEP8) --in-place --aggressive --aggressive --recursive tests
 	$(PEP8) picopayments_client
 	$(PEP8) tests
-	$(COVERAGE) run --source=picopayments_client setup.py test
-	$(COVERAGE) html
+	# $(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_client -vv --capture=no --pdb tests/standard_usage_test.py::test_standard_usage
+	$(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_client -vv
+	# $(COVERAGE) run --source=picopayments_client setup.py test
+	# $(COVERAGE) html
 	# $(COVERAGE) report --fail-under=90
 
 
@@ -93,8 +95,29 @@ publish: test
 	$(PY) setup.py register bdist_wheel upload
 
 
-view_readme: setup
+view_readme: setup graphs
 	env/bin/restview README.rst
+
+
+graphs:
+	ditaa schema.ditaa schema.png
+
+
+bitcoind_startserver:
+	bitcoind -testnet -daemon -txindex  # -reindex
+
+
+bitcoind_getinfo:
+	bitcoin-cli --rpcuser=bitcoinrpcuser --rpcpassword=bitcoinrpcpass --rpcport=18332 getinfo
+
+
+bitcoind_stopserver:
+	# requires "pip install counterparty-cli==1.1.2"
+	bitcoin-cli --rpcuser=bitcoinrpcuser --rpcpassword=bitcoinrpcpass --rpcport=18332 stop
+
+
+counterparty_startserver: bitcoind_startserver
+	env/bin/counterparty-server --testnet --backend-port=18332 --backend-user=bitcoinrpcuser --backend-password=bitcoinrpcpass start
 
 
 # Break in case of bug!
