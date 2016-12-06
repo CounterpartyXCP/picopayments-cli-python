@@ -48,6 +48,12 @@ def parse(args):
         '--terms', action='store_true', help="Show hub terms."
     )
 
+    # hub funding addresses
+    parser.add_argument(
+        '--hub-funding-addresses', action='store_true',
+        help="Show hub funding addresses."
+    )
+
     # picopayments hub
     default_port = 15000 if testnet else 5000
     default = "https://127.0.0.1:{0}/api/".format(default_port)
@@ -64,7 +70,7 @@ def parse(args):
         help="Picopayments hub password."
     )
     parser.add_argument(
-        '--hub-skip-verify-cert', action='store_true',
+        '--hub-skip-verify', action='store_true',
         help="Skip ssl cert verification."
     )
 

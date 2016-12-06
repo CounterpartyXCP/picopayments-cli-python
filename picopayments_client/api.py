@@ -7,7 +7,7 @@ from picopayments_client.rpc import JsonRpc
 
 @dispatcher.add_method
 def terms(**kwargs):
-    verify = not kwargs["hub_skip_verify_cert"]
+    verify = not kwargs["hub_skip_verify"]
     assets = [kwargs["asset"]] if kwargs["asset"] else None
     return JsonRpc(
         kwargs["hub_url"],
@@ -15,6 +15,17 @@ def terms(**kwargs):
         password=kwargs["hub_password"],
         verify_ssl_cert=verify
     ).mph_terms(assets=assets)
+
+
+@dispatcher.add_method
+def hub_funding_addresses(**kwargs):
+    verify = not kwargs["hub_skip_verify"]
+    return JsonRpc(
+        kwargs["hub_url"],
+        username=kwargs["hub_username"],
+        password=kwargs["hub_password"],
+        verify_ssl_cert=verify
+    ).mph_funding_addresses()
 
 
 @Request.application

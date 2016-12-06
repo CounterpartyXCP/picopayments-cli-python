@@ -23,6 +23,8 @@ if __name__ == "__main__":
         print(__version__)
     elif args["srv_start"] is True:
         result = api.serve_start(**args)
+    elif args["hub_funding_addresses"] is True:
+        result = api.hub_funding_addresses(**args)
     else:
         print("FIXME print help")
 
