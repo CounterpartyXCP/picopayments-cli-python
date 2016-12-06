@@ -16,7 +16,7 @@ def parse(args):
     parser = argparse.ArgumentParser(description=description)
 
     # network to use
-    parser.add_argument(
+    parser.add_argument(  # FIXME move to config
         '--testnet', action='store_true', help="Use bitcoin testnet."
     )
 
@@ -54,22 +54,34 @@ def parse(args):
         help="Show hub funding addresses."
     )
 
+    # get balances for given address
+    parser.add_argument(
+        '--get-balances', action='store_true',
+        help="Get balances for wallet or given address."
+    )
+
+    #
+    parser.add_argument(
+        '--blockchain-send-funds', action='store_true',
+        help="Send funds to given address."
+    )
+
     # picopayments hub
     default_port = 15000 if testnet else 5000
     default = "https://127.0.0.1:{0}/api/".format(default_port)
-    parser.add_argument(
+    parser.add_argument(  # FIXME move to config
         '--hub-url', default=default, metavar="URL",
         help="Picopayments hub api: {0}".format(default)
     )
-    parser.add_argument(
+    parser.add_argument(  # FIXME move to config
         '--hub-username', default=None, metavar="VALUE",
         help="Picopayments hub username."
     )
-    parser.add_argument(
+    parser.add_argument(  # FIXME move to config
         '--hub-password', default=None, metavar="VALUE",
         help="Picopayments hub password."
     )
-    parser.add_argument(
+    parser.add_argument(  # FIXME move to config
         '--hub-skip-verify', action='store_true',
         help="Skip ssl cert verification."
     )
@@ -92,15 +104,35 @@ def parse(args):
     # generic options
     parser.add_argument(
         '--handle', default=None, metavar="HANDLE",
-        help="Filter result by connection handle."
+        help="FIXME doc string"
     )
     parser.add_argument(
         '--asset', default=None, metavar="ASSET",
-        help="Filter result by asset."
+        help="FIXME doc string"
     )
     parser.add_argument(
-        '--quantity', default=None, metavar="HANDLE",
-        help="Filter result by connection handle."
+        '--address', default=None, metavar="ADDRESS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(
+        '--quantity', default=None, metavar="SATOSHIS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(
+        '--extra-btc', default=0, metavar="SATOSHIS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(  # FIXME get from wallet
+        '--source', default=None, metavar="WIF",
+        help="FIXME doc string"
+    )
+    parser.add_argument(  # FIXME move to config
+        '--regular-dust-size', default=5430, metavar="SATOSHIS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(  # FIXME move to config
+        '--fee-per-kb', default=50000, metavar="SATOSHIS",
+        help="FIXME doc string"
     )
 
     # filter state
