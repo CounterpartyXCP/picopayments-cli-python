@@ -112,7 +112,6 @@ class Mph(Mpc):
             self.h2c_state, clearance=clearance
         )
 
-
     def sync(self):
         """TODO doc string"""
 

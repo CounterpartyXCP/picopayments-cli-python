@@ -232,23 +232,31 @@ class Mpc(object):
                                             clearance=clearance)
         send_script = send_state["deposit_script"]
         send_deposit_expire_time = scripts.get_deposit_expire_time(send_script)
-        send_deposit_address = util.script_address(send_script, netcode=netcode)
+        send_deposit_address = util.script_address(
+            send_script, netcode=netcode
+        )
         send_balances = self.get_balances(send_deposit_address, ["BTC", asset])
         send_deposit = send_balances.get(asset, 0)
         send_transferred = 0
         if len(send_state["commits_active"]) > 0:
-            send_transferred = self.api.mpc_transferred_amount(state=send_state)
+            send_transferred = self.api.mpc_transferred_amount(
+                state=send_state
+            )
 
         recv_ttl = self.api.mpc_deposit_ttl(state=recv_state,
                                             clearance=clearance)
         recv_script = recv_state["deposit_script"]
         recv_deposit_expire_time = scripts.get_deposit_expire_time(recv_script)
-        recv_deposit_address = util.script_address(recv_script, netcode=netcode)
+        recv_deposit_address = util.script_address(
+            recv_script, netcode=netcode
+        )
         recv_balances = self.get_balances(recv_deposit_address, ["BTC", asset])
         recv_deposit = recv_balances.get(asset, 0)
         recv_transferred = 0
         if len(recv_state["commits_active"]) > 0:
-            recv_transferred = self.api.mpc_transferred_amount(state=recv_state)
+            recv_transferred = self.api.mpc_transferred_amount(
+                state=recv_state
+            )
 
         return {
             "asset": asset,

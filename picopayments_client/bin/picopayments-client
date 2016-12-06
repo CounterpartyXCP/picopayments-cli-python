@@ -7,8 +7,24 @@
 import json
 import sys
 from picopayments_client import cli
+from picopayments_client import api
+from picopayments_client import __version__
 
 
 if __name__ == "__main__":
     args = cli.parse(sys.argv[1:])
-    print(json.dumps(args, indent=2, sort_keys=True))
+    # print(json.dumps(args, indent=2, sort_keys=True))
+    # import pudb;pu.db
+
+    result = None
+    if args["terms"] is True:
+        result = api.terms(**args)
+    elif args["version"] is True:
+        print(__version__)
+    elif args["srv_start"] is True:
+        result = api.serve_start(**args)
+    else:
+        print("FIXME print help")
+
+    if result is not None:
+        print(json.dumps(result, indent=2, sort_keys=True))
