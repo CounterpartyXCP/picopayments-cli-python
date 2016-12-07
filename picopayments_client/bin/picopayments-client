@@ -8,27 +8,25 @@ import json
 import sys
 from picopayments_client import cli
 from picopayments_client import api
+from picopayments_client import etc
 from picopayments_client import __version__
 
 
 if __name__ == "__main__":
     kwargs = cli.parse(sys.argv[1:])
-    # print(json.dumps(kwargs, indent=2, sort_keys=True))
-    # import pudb;pu.db
+    etc.load(kwargs["basedir"], kwargs["testnet"])
 
     result = None
-    if kwargs["terms"] is True:
-        result = api.terms(**kwargs)
+    if kwargs["hub_status"] is True:
+        result = api.hub_status(**kwargs)
     elif kwargs["version"] is True:
         print(__version__)
-    elif kwargs["srv_start"] is True:
-        result = api.serve_start(**kwargs)
-    elif kwargs["hub_funding_addresses"] is True:
-        result = api.hub_funding_addresses(**kwargs)
     elif kwargs["get_balances"] is True:
         result = api.get_balances(**kwargs)
     elif kwargs["blockchain_send_funds"] is True:
         result = api.blockchain_send_funds(**kwargs)
+    elif kwargs["srv_start"] is True:
+        result = api.serve_start(**kwargs)
     else:
         print("FIXME print help")
 

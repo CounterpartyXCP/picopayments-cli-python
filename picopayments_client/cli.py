@@ -16,7 +16,7 @@ def parse(args):
     parser = argparse.ArgumentParser(description=description)
 
     # network to use
-    parser.add_argument(  # FIXME move to config
+    parser.add_argument(
         '--testnet', action='store_true', help="Use bitcoin testnet."
     )
 
@@ -27,17 +27,6 @@ def parse(args):
         help="Location of app files: {0}".format(default)
     )
 
-    # # logging options
-    # parser.add_argument(
-    #     '--debug', action='store_true', help="Maximum logging."
-    # )
-    # parser.add_argument(
-    #     '--verbose', action='store_true', help="Maximum logging."
-    # )
-    # parser.add_argument(
-    #     '--quite', action='store_true', help="Minimum logging."
-    # )
-
     # show version
     parser.add_argument(
         '--version', action='store_true', help="Show version number."
@@ -45,13 +34,7 @@ def parse(args):
 
     # show hub terms
     parser.add_argument(
-        '--terms', action='store_true', help="Show hub terms."
-    )
-
-    # hub funding addresses
-    parser.add_argument(
-        '--hub-funding-addresses', action='store_true',
-        help="Show hub funding addresses."
+        '--hub-status', action='store_true', help="Get current hub status."
     )
 
     # get balances for given address
@@ -60,30 +43,10 @@ def parse(args):
         help="Get balances for wallet or given address."
     )
 
-    #
+    # send funds to given address.
     parser.add_argument(
         '--blockchain-send-funds', action='store_true',
         help="Send funds to given address."
-    )
-
-    # picopayments hub
-    default_port = 15000 if testnet else 5000
-    default = "https://127.0.0.1:{0}/api/".format(default_port)
-    parser.add_argument(  # FIXME move to config
-        '--hub-url', default=default, metavar="URL",
-        help="Picopayments hub api: {0}".format(default)
-    )
-    parser.add_argument(  # FIXME move to config
-        '--hub-username', default=None, metavar="VALUE",
-        help="Picopayments hub username."
-    )
-    parser.add_argument(  # FIXME move to config
-        '--hub-password', default=None, metavar="VALUE",
-        help="Picopayments hub password."
-    )
-    parser.add_argument(  # FIXME move to config
-        '--hub-skip-verify', action='store_true',
-        help="Skip ssl cert verification."
     )
 
     # start rpc api server
@@ -120,18 +83,6 @@ def parse(args):
     )
     parser.add_argument(
         '--extra-btc', default=0, metavar="SATOSHIS",
-        help="FIXME doc string"
-    )
-    parser.add_argument(  # FIXME get from wallet
-        '--source', default=None, metavar="WIF",
-        help="FIXME doc string"
-    )
-    parser.add_argument(  # FIXME move to config
-        '--regular-dust-size', default=5430, metavar="SATOSHIS",
-        help="FIXME doc string"
-    )
-    parser.add_argument(  # FIXME move to config
-        '--fee-per-kb', default=50000, metavar="SATOSHIS",
         help="FIXME doc string"
     )
 
