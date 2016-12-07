@@ -45,22 +45,34 @@ def parse(args):
 
     # send funds to given address.
     parser.add_argument(
-        '--blockchain-send-funds', action='store_true',
+        '--blockchain-send', action='store_true',
         help="Send funds to given address."
+    )
+    parser.add_argument(
+        '--destination', default=None, metavar="ADDRESS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(
+        '--quantity', default=None, metavar="SATOSHIS",
+        help="FIXME doc string"
+    )
+    parser.add_argument(
+        '--extra-btc', default=0, metavar="SATOSHIS",
+        help="FIXME doc string"
     )
 
     # start rpc api server
     parser.add_argument(
-        '--srv-start', action='store_true',
+        '--serve', action='store_true',
         help="Start RPC-API server."
     )
     parser.add_argument(
-        '--srv-host', default="localhost", metavar="PORT",
+        '--host', default="localhost", metavar="PORT",
         help="RPC-API server host: {0}".format("localhost")
     )
     default = 16000 if testnet else 6000
     parser.add_argument(
-        '--srv-port', type=int, default=default, metavar="PORT",
+        '--port', type=int, default=default, metavar="PORT",
         help="RPC-API server port: {0}".format(default)
     )
 
@@ -71,18 +83,6 @@ def parse(args):
     )
     parser.add_argument(
         '--asset', default=None, metavar="ASSET",
-        help="FIXME doc string"
-    )
-    parser.add_argument(
-        '--address', default=None, metavar="ADDRESS",
-        help="FIXME doc string"
-    )
-    parser.add_argument(
-        '--quantity', default=None, metavar="SATOSHIS",
-        help="FIXME doc string"
-    )
-    parser.add_argument(
-        '--extra-btc', default=0, metavar="SATOSHIS",
         help="FIXME doc string"
     )
 

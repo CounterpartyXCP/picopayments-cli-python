@@ -17,7 +17,6 @@ class Mph(Mpc):
         "asset",  # set once
         "handle",  # set once
         "channel_terms",  # set once
-        "client_wif",  # set once
         "client_pubkey",  # set once
         "hub_pubkey",  # set once
         "secrets",  # append only
@@ -71,9 +70,8 @@ class Mph(Mpc):
 
         assert(not self.is_connected())
         self.asset = asset
-        self.client_wif = self.api.auth_wif
         self.own_url = own_url
-        self.client_pubkey = keys.pubkey_from_wif(self.client_wif)
+        self.client_pubkey = keys.pubkey_from_wif(self.api.auth_wif)
         self.c2h_deposit_expire_time = expire_time
         self.c2h_deposit_quantity = quantity
         next_revoke_hash = self._create_initial_secrets()
@@ -81,7 +79,7 @@ class Mph(Mpc):
         self._validate_matches_terms()
         c2h_deposit_rawtx = self._make_deposit()
         h2c_deposit_script = self._exchange_deposit_scripts(next_revoke_hash)
-        signed_rawtx = self.sign(c2h_deposit_rawtx, self.client_wif)
+        signed_rawtx = self.sign(c2h_deposit_rawtx, self.api.auth_wif)
         c2h_deposit_txid = self.publish(signed_rawtx)
         self._set_initial_h2c_state(h2c_deposit_script)
         self._add_to_commits_requested(next_revoke_hash)
@@ -106,7 +104,7 @@ class Mph(Mpc):
 
     def get_status(self, clearance=6):
         assert(self.is_connected())
-        netcode = keys.netcode_from_wif(self.client_wif)
+        netcode = keys.netcode_from_wif(self.api.auth_wif)
         return self.full_duplex_channel_status(
             self.handle, netcode, self.c2h_state,
             self.h2c_state, clearance=clearance
@@ -123,7 +121,7 @@ class Mph(Mpc):
         sync_fee = self.channel_terms["sync_fee"]
         quantity = sum([p["amount"] for p in payments]) + sync_fee
         result = self.full_duplex_transfer(
-            self.client_wif, self.secrets.get, self.c2h_state,
+            self.api.auth_wif, self.secrets.get, self.c2h_state,
             self.h2c_state, quantity, self.c2h_next_revoke_secret_hash,
             self.c2h_commit_delay_time
         )
@@ -215,7 +213,7 @@ class Mph(Mpc):
         return txids
 
     def _get_wif(self, pubkey):
-        return self.client_wif
+        return self.api.auth_wif
 
     def _add_to_commits_requested(self, secret_hash):
         # emulates mpc_request_commit api call

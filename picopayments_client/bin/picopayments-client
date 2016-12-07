@@ -23,10 +23,10 @@ if __name__ == "__main__":
         print(__version__)
     elif kwargs["get_balances"] is True:
         result = api.get_balances(**kwargs)
-    elif kwargs["blockchain_send_funds"] is True:
-        result = api.blockchain_send_funds(**kwargs)
-    elif kwargs["srv_start"] is True:
-        result = api.serve_start(**kwargs)
+    elif kwargs["blockchain_send"] is True:
+        result = api.blockchain_send(**kwargs)
+    elif kwargs["serve"] is True:
+        result = api.serve(**kwargs)
     else:
         print("FIXME print help")
 
