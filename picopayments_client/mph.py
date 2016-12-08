@@ -4,6 +4,7 @@
 
 
 import os
+import time
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
@@ -143,6 +144,7 @@ class Mph(Mpc):
         c2h_revokes = result["revokes"]
         receive_payments = result["receive"]
         self.c2h_next_revoke_secret_hash = result["next_revoke_secret_hash"]
+        self._update_payments(payments, receive_payments)
 
         # add commit to h2c channel
         if h2c_commit:
@@ -159,6 +161,22 @@ class Mph(Mpc):
             )
 
         return receive_payments
+
+    def _update_payments(self, payments_sent, payments_received):
+        for payment in payments_sent:
+            self.payments_sent.append({
+                "handle": payment["payee_handle"],
+                "amount": payment["amount"],
+                "token": payment["token"],
+                "timestamp": time.time(),
+            })
+        for payment in payments_received:
+            self.payments_received.append({
+                "handle": payment["payee_handle"],
+                "amount": payment["amount"],
+                "token": payment["token"],
+                "timestamp": time.time(),
+            })
 
     def close(self):
         txids = []
