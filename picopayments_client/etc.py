@@ -4,18 +4,23 @@
 
 
 import os
+import json
 
 
-basedir = None
+# path and network settings
 testnet = None
 netcode = None
+basedir = None
+config_path = None
+wallet_path = None
+
+
 hub_url = None
 hub_username = None
 hub_password = None
 hub_verify_ssl_cert = None
 regular_dust_size = None
 fee_per_kb = None
-wallet_path = None
 
 
 def load(basedir, testnet):
@@ -24,20 +29,35 @@ def load(basedir, testnet):
     if not os.path.exists(basedir):
         os.makedirs(basedir)
 
-    saved = {}  # FIXME load and create default if none exists
-    default_hub_port = 15000 if testnet else 5000
-    default_hub_url = "https://127.0.0.1:{0}/api/".format(default_hub_port)
+    # update path and network settings
     wallet_file = "testnet.wif" if testnet else "mainnet.wif"
-
+    config_file = "testnet.cfg" if testnet else "mainnet.cfg"
     globals().update({
         "basedir": basedir,
         "testnet": testnet,
         "netcode": "XTN" if testnet else "BTC",
-        "fee_per_kb": saved.get("fee_per_kb", 50000),
-        "regular_dust_size": saved.get("regular_dust_size", 5430),
-        "hub_url": saved.get("hub_url", default_hub_url),
-        "hub_username": saved.get("hub_username", None),
-        "hub_password": saved.get("hub_password", None),
-        "hub_verify_ssl_cert": saved.get("hub_verify_ssl_cert", False),
-        "wallet_path": os.path.join(basedir, wallet_file)
+        "wallet_path": os.path.join(basedir, wallet_file),
+        "config_path": os.path.join(basedir, config_file)
     })
+
+    # load config
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as infile:
+            config = json.load(infile)
+
+    # create config if it does not exist
+    else:
+        with open(config_path, 'w') as outfile:
+            hub_port = 15000 if testnet else 5000
+            config = {
+                "fee_per_kb": 50000,
+                "regular_dust_size": 5430,
+                "hub_url": "https://127.0.0.1:{0}/api/".format(hub_port),
+                "hub_username": None,
+                "hub_password": None,
+                "hub_verify_ssl_cert": False,
+            }
+            json.dump(config, outfile, indent=2, sort_keys=True)
+
+    # update config settings
+    globals().update(config)

@@ -6,18 +6,24 @@ from jsonrpc import JSONRPCResponseManager, dispatcher
 from picopayments_client.rpc import JsonRpc
 from picopayments_client.mpc import Mpc
 from picopayments_client import etc
+from picopayments_client import __version__
 from micropayment_core import keys
 
 
 @dispatcher.add_method
-def hub_status(asset=None, **kwargs):
+def version():
+    return __version__
+
+
+@dispatcher.add_method
+def get_hub_status(asset=None):
     hub_api = _hub_api()
     assets = [asset] if asset else None
     return hub_api.mph_status(assets=assets)
 
 
 @dispatcher.add_method
-def get_balances(asset=None, **kwargs):
+def get_balances(asset=None):
     hub_api = _hub_api()
     assets = [asset] if asset else None
     address = keys.address_from_wif(_get_wif())
@@ -25,11 +31,8 @@ def get_balances(asset=None, **kwargs):
 
 
 @dispatcher.add_method
-def blockchain_send(asset=None, destination=None, quantity=None,
-                    extra_btc=None, **kwargs):
+def block_send(asset, destination, quantity, extra_btc=0):
     hub_api = _hub_api()
-    assert(asset is not None)
-    assert(quantity is not None)
     return Mpc(hub_api).block_send(
         source=_get_wif(), destination=destination, asset=asset,
         quantity=int(quantity), fee_per_kb=int(etc.fee_per_kb),
@@ -38,7 +41,7 @@ def blockchain_send(asset=None, destination=None, quantity=None,
 
 
 @dispatcher.add_method
-def connect(quantity, expire_time=1024, asset=None, delay_time=2):
+def connect(asset, quantity, expire_time=1024, delay_time=2):
     pass
 
 
@@ -68,10 +71,5 @@ def _get_wif():
     return wif
 
 
-def serve(host=None, port=None, **kwargs):
-    assert(host is not None)
-    assert(port is not None)
-    run_simple(
-        host, port,
-        _application, processes=1, ssl_context='adhoc'
-    )
+def serve_api(host=None, port=None):
+    run_simple(host, port, _application)
