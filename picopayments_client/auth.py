@@ -17,7 +17,8 @@ class AuthPubkeyMissmatch(Exception):
         super(AuthPubkeyMissmatch, self).__init__(msg)
 
 
-def sign_json(json_data, privkey):
+def sign_json(json_data, auth_wif):
+    privkey = keys.wif_to_privkey(auth_wif)
 
     # add pubkey to json data if needed
     pubkey = keys.pubkey_from_privkey(privkey)

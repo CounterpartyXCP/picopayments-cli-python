@@ -172,7 +172,7 @@ class Mph(Mpc):
             })
         for payment in payments_received:
             self.payments_received.append({
-                "handle": payment["payee_handle"],
+                "handle": payment["payer_handle"],
                 "amount": payment["amount"],
                 "token": payment["token"],
                 "timestamp": time.time(),

@@ -44,15 +44,15 @@ def jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
 
 
 def auth_jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
-                      privkey=None, username=None, password=None):
+                      auth_wif=None, username=None, password=None):
 
-    if privkey:
-        params = auth.sign_json(params, privkey)
+    if auth_wif:
+        params = auth.sign_json(params, auth_wif)
 
     result = jsonrpc_call(url, method, params=params, username=username,
                           password=password, verify_ssl_cert=verify_ssl_cert)
 
-    if privkey:
+    if auth_wif:
         auth.verify_json(result)
 
     return result
@@ -60,16 +60,16 @@ def auth_jsonrpc_call(url, method, params={}, verify_ssl_cert=True,
 
 class JsonRpc(object):
 
-    def __init__(self, url, privkey=None, verify_ssl_cert=True,
+    def __init__(self, url, auth_wif=None, verify_ssl_cert=True,
                  username=None, password=None):
         self.url = url
-        self.privkey = privkey
+        self.auth_wif = auth_wif
         self.username = username
         self.password = password
         self.verify_ssl_cert = verify_ssl_cert
 
     def __getattribute__(self, name):
-        props = ["url", "privkey", "verify_ssl_cert", "username", "password"]
+        props = ["url", "auth_wif", "verify_ssl_cert", "username", "password"]
         # FIXME only allow test_auth in unit tests
         auth_methods = [
             "mph_request", "mph_deposit", "mph_sync", "mph_close"
@@ -79,12 +79,12 @@ class JsonRpc(object):
             return object.__getattribute__(self, name)
 
         def wrapper(**kwargs):
-            privkey = self.privkey if name in auth_methods else None
+            auth_wif = self.auth_wif if name in auth_methods else None
             return auth_jsonrpc_call(
                 url=self.url,
                 method=name,
                 params=kwargs,
-                privkey=privkey,
+                auth_wif=auth_wif,
                 verify_ssl_cert=self.verify_ssl_cert,
                 username=self.username,
                 password=self.password

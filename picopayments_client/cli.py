@@ -92,4 +92,25 @@ def parse(args):
         help="RPC-API server port: {0}".format(default)
     )
 
+    # connect to hub
+    command_parser = subparsers.add_parser(
+        "connect", help="Create micropayment connection with hub."
+    )
+    command_parser.add_argument(
+        'asset', metavar="ASSET",
+        help="Optionally filter for given asset."
+    )
+    command_parser.add_argument(
+        'quantity', type=int, metavar="QUANTITY",
+        help="FIXME doc string"
+    )
+    command_parser.add_argument(
+        '--expire_time', type=int, default=1024, metavar="BLOCKS",
+        help="FIXME doc string"
+    )
+    command_parser.add_argument(
+        '--delay_time', type=int, default=2, metavar="BLOCKS",
+        help="FIXME doc string"
+    )
+
     return vars(parser.parse_args(args=args)), parser
