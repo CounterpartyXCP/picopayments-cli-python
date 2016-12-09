@@ -6,17 +6,17 @@ from picopayments_client import auth
 class TestAuth(unittest.TestCase):
 
     def test_sign_verify_json(self):
-        privkey = keys.wif_to_privkey(keys.generate_wif())
-        signed_json_data = auth.sign_json({"foo": "bar"}, privkey)
+        auth_wif = keys.generate_wif()
+        signed_json_data = auth.sign_json({"foo": "bar"}, auth_wif)
         valid = auth.verify_json(signed_json_data)
         self.assertTrue(valid)
 
     def test_auth_pubkey_missmatch(self):
 
         def func():
-            privkey = keys.wif_to_privkey(keys.generate_wif())
+            auth_wif = keys.generate_wif()
             data = {"foo": "bar", "pubkey": "invalid"}
-            signed_json_data = auth.sign_json(data, privkey)
+            signed_json_data = auth.sign_json(data, auth_wif)
             auth.verify_json(signed_json_data)
 
         self.assertRaises(auth.AuthPubkeyMissmatch, func)

@@ -1,6 +1,5 @@
 import unittest
 from tests.mock_rpc_server import start
-from micropayment_core import keys
 from picopayments_client import rpc
 
 
@@ -14,9 +13,8 @@ class TestRpc(unittest.TestCase):
 
     def test_api_auth_call(self):
         auth_wif = "cNXoRUC2eqcBEv1AmvPgM6NgCYV1ReTTHuAmVxaAh6AvVLHroSfU"
-        privkey = keys.wif_to_privkey(auth_wif)
         url = "https://127.0.0.1:16000/api/"
-        api = rpc.JsonRpc(privkey=privkey, url=url, verify_ssl_cert=False,
+        api = rpc.JsonRpc(auth_wif=auth_wif, url=url, verify_ssl_cert=False,
                           username="username", password="password")
         result = api.mph_sync()
         self.assertIn("foo", result)
@@ -25,9 +23,8 @@ class TestRpc(unittest.TestCase):
 
         def function():
             auth_wif = "cNXoRUC2eqcBEv1AmvPgM6NgCYV1ReTTHuAmVxaAh6AvVLHroSfU"
-            privkey = keys.wif_to_privkey(auth_wif)
             url = "https://127.0.0.1:16000/api/"
-            api = rpc.JsonRpc(privkey=privkey, url=url,
+            api = rpc.JsonRpc(auth_wif=auth_wif, url=url,
                               verify_ssl_cert=False)
             api.non_existant()
         self.assertRaises(rpc.JsonRpcCallFailed, function)

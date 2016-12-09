@@ -4,15 +4,13 @@ from werkzeug.wrappers import Request, Response
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from multiprocessing import Process
 from picopayments_client import auth
-from micropayment_core import keys
 
 
 @dispatcher.add_method
 def mph_sync(**kwargs):
     auth.verify_json(kwargs)
     auth_wif = "cT9pEqELRn5v67hJmmmYQmPnsuezJeup7CqQiJBUTZnLLoxdydAb"
-    auth_privkey = keys.wif_to_privkey(auth_wif)
-    return auth.sign_json({"foo": "bar"}, auth_privkey)
+    return auth.sign_json({"foo": "bar"}, auth_wif)
 
 
 @Request.application
