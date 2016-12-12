@@ -56,8 +56,9 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
 def get_status():
     data = _load_data()
     result = {}
+    hub_api = _hub_api()
     for handle, connection_data in data["connections"].items():
-        client = Mph.deserialize(connection_data)
+        client = Mph.deserialize(hub_api, connection_data)
         result[handle] = client.get_status()
     return result
 

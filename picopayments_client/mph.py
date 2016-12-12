@@ -8,7 +8,6 @@ import time
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
-from .rpc import JsonRpc
 from .mpc import Mpc
 
 
@@ -39,24 +38,16 @@ class Mph(Mpc):
             setattr(self, attr, None)
 
     @classmethod
-    def deserialize(cls, data, api_cls=JsonRpc):
+    def deserialize(cls, api, data):
         """TODO doc string"""
-        obj = cls(api_cls(**data["hub"]))
+        obj = cls(api)
         for attr in obj._SERIALIZABLE_ATTRS:
             setattr(obj, attr, data[attr])
         return obj
 
     def serialize(self):
         """TODO doc string"""
-        data = {
-            "hub": {
-                "url": self.api.url,
-                "auth_wif": self.api.auth_wif,
-                "username": self.api.username,
-                "password": self.api.password,
-                "verify_ssl_cert": self.api.verify_ssl_cert,
-            }
-        }
+        data = {}
         for attr in self._SERIALIZABLE_ATTRS:
             data[attr] = getattr(self, attr)
         return data
