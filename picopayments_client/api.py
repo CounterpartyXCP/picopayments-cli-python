@@ -47,9 +47,19 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
     client = Mph(_hub_api())
     send_deposit_txid = client.connect(quantity, expire_time=expire_time,
                                        asset=asset, delay_time=delay_time)
-    data["connections"].append(client.serialize())
+    data["connections"][client.handle] = client.serialize()
     _save_data(data)
     return send_deposit_txid
+
+
+@dispatcher.add_method
+def get_status():
+    data = _load_data()
+    result = {}
+    for handle, connection_data in data["connections"].items():
+        client = Mph.deserialize(connection_data)
+        result[handle] = client.get_status()
+    return result
 
 
 @Request.application
@@ -82,7 +92,7 @@ def _load_data():
         with open(etc.data_path, 'r') as infile:
             data = json.load(infile)
     else:
-        data = {"connections": []}
+        data = {"connections": {}}
         _save_data(data)
     return data
 

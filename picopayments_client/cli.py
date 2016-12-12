@@ -4,7 +4,6 @@
 
 
 import os
-import sys
 import argparse
 
 
@@ -111,6 +110,11 @@ def parse(args):
     command_parser.add_argument(
         '--delay_time', type=int, default=2, metavar="BLOCKS",
         help="FIXME doc string"
+    )
+
+    # get connections status
+    command_parser = subparsers.add_parser(
+        "get_status", help="Get status of connections."
     )
 
     return vars(parser.parse_args(args=args)), parser
