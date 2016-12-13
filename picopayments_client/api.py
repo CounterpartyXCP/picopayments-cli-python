@@ -75,6 +75,7 @@ def _channel_status(hub_api, connection_data, verbose):
             "asset": status["asset"],
             "balance": status["balance"],
             "ttl": status["ttl"],
+            "status": status["status"]
         }
 
 

@@ -259,11 +259,27 @@ class Mpc(object):
             )
 
         send_balance = send_deposit + recv_transferred - send_transferred
+
+        ttl = min(send_ttl, recv_ttl)
+
+        # get channel connection state
+        status = "opening"
+        if send_ttl and recv_ttl:
+            status = "open"
+        closed = False  # FIXME get info
+        send_secret = False  # FIXME get send spend secret
+        commits_published = self.api.mpc_published_commits(state=send_state)
+        expired = ttl == 0  # None explicitly ignore as channel opening
+        if closed or expired or send_secret or commits_published:
+            status = "closed"
+
         return {
+            # FIXME get channel tx history
+            "status": status,
             "asset": asset,
             "netcode": netcode,
             "balance": send_balance,
-            "ttl": min(send_ttl, recv_ttl),
+            "ttl": ttl,
             "send_balance": send_balance,
             "send_deposit_address": send_deposit_address,
             "send_deposit_ttl": send_ttl,
