@@ -64,23 +64,40 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
     }
 
 
+def _channel_status(hub_api, connection_data, verbose):
+    client = Mph.deserialize(hub_api, connection_data)
+    status = client.get_status()
+    if verbose:
+        status["data"] = connection_data
+        return status
+    else:
+        return {
+            "asset": status["asset"],
+            "balance": status["balance"],
+            "ttl": status["ttl"],
+        }
+
+
+
 @dispatcher.add_method
-def get_status(handle=None):
+def get_status(handle=None, verbose=False):
     """FIXME add doc string"""
     # FIXME have a short and verbose status
-    # FIXME include wallet balance
-    # FIXME include payment history
     data = _load_data()
     hub_api = _hub_api()
-    result = {}
-    if handle:
-        connection_data = data["connections"][handle]
-        client = Mph.deserialize(hub_api, connection_data)
-        result[handle] = client.get_status()
-    else:
-        for handle, connection_data in data["connections"].items():
-            client = Mph.deserialize(hub_api, connection_data)
-            result[handle] = client.get_status()
+    result = {
+        "connections": {},
+        "wallet": {
+            "address": keys.address_from_wif(_load_wif()),
+            "balances": get_balances()
+        }
+    }
+    for _handle, connection_data in data["connections"].items():
+        if handle is not None and _handle != handle:
+            continue
+        result["connections"][_handle] = _channel_status(
+            hub_api, connection_data, verbose
+        )
     return result
 
 
@@ -90,20 +107,14 @@ def sync(handle=None):
     result = {}
     data = _load_data()
     hub_api = _hub_api()
-    if handle:
-        connection_data = data["connections"][handle]
+    for _handle, connection_data in data["connections"].items():
+        if handle is not None and _handle != handle:
+            continue
         client = Mph.deserialize(hub_api, connection_data)
-        result[handle] = {
+        result[_handle] = {
             "txids": client.update(),
             "received_payments": client.sync()
         }
-    else:
-        for handle, connection_data in data["connections"].items():
-            client = Mph.deserialize(hub_api, connection_data)
-            result[handle] = {
-                "txids": client.update(),
-                "received_payments": client.sync()
-            }
     _save_data(data)
     return result
 

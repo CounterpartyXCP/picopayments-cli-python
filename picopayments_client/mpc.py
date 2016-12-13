@@ -258,11 +258,13 @@ class Mpc(object):
                 state=recv_state
             )
 
+        send_balance = send_deposit + recv_transferred - send_transferred
         return {
             "asset": asset,
-            "handle": handle,
             "netcode": netcode,
-            "send_balance": send_deposit + recv_transferred - send_transferred,
+            "balance": send_balance,
+            "ttl": min(send_ttl, recv_ttl),
+            "send_balance": send_balance,
             "send_deposit_address": send_deposit_address,
             "send_deposit_ttl": send_ttl,
             "send_deposit_balances": send_balances,

@@ -120,10 +120,22 @@ def parse(args):
     command_parser = subparsers.add_parser(
         "get_status", help="Get status of connections."
     )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Only show status for given handle."
+    )
+    command_parser.add_argument(
+        '--verbose', action='store_true',
+        help="Verbose connection status output."
+    )
 
     # sync connections
     command_parser = subparsers.add_parser(
         "sync", help="Sync open connections and recover closed funds."
+    )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Handle of channel to sync."
     )
 
     # close connection
