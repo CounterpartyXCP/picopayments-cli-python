@@ -52,17 +52,13 @@ class Mph(Mpc):
             data[attr] = getattr(self, attr)
         return data
 
-    def is_connected(self):
-        """Returns True if connected to a hub."""
-        return bool(self.handle)
-
     def connect(self, quantity, expire_time=1024, asset="XCP",
                 delay_time=2, own_url=None):
         """TODO doc string"""
 
-        assert(not self.is_connected())
         self.asset = asset
         self.own_url = own_url
+        self.closed = False
         self.client_pubkey = keys.pubkey_from_wif(self.api.auth_wif)
         self.c2h_deposit_expire_time = expire_time
         self.c2h_deposit_quantity = quantity
@@ -84,7 +80,6 @@ class Mph(Mpc):
     def micro_send(self, handle, quantity, token=None):
         """TODO doc string"""
 
-        assert(self.is_connected())
         if token is None:
             token = util.b2h(os.urandom(32))
         self.payments_queued.append({
@@ -95,17 +90,15 @@ class Mph(Mpc):
         return token
 
     def get_status(self, clearance=6):
-        assert(self.is_connected())
         netcode = keys.netcode_from_wif(self.api.auth_wif)
         return self.full_duplex_channel_status(
             self.handle, netcode, self.c2h_state,
-            self.h2c_state, clearance=clearance
+            self.h2c_state, self.secrets.get, clearance=clearance
         )
 
     def sync(self):
         """TODO doc string"""
 
-        assert(self.is_connected())
         payments = self.payments_queued
         self.payments_queued = []
 

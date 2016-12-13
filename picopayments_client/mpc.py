@@ -224,7 +224,8 @@ class Mpc(object):
         return txids
 
     def full_duplex_channel_status(self, handle, netcode, send_state,
-                                   recv_state, clearance=6):
+                                   recv_state, get_secret_func,
+                                   clearance=6):
         assert(send_state["asset"] == recv_state["asset"])
         asset = send_state["asset"]
 
@@ -260,17 +261,19 @@ class Mpc(object):
 
         send_balance = send_deposit + recv_transferred - send_transferred
 
-        ttl = min(send_ttl, recv_ttl)
+        ttl = None
+        if send_ttl is not None and recv_ttl is not None:
+            ttl = min(send_ttl, recv_ttl)
 
-        # get channel connection state
+        # get connection status
         status = "opening"
         if send_ttl and recv_ttl:
             status = "open"
-        closed = False  # FIXME get info
-        send_secret = False  # FIXME get send spend secret
+        send_secret_hash = scripts.get_deposit_spend_secret_hash(send_script)
+        send_secret = get_secret_func(send_secret_hash)
         commits_published = self.api.mpc_published_commits(state=send_state)
         expired = ttl == 0  # None explicitly ignore as channel opening
-        if closed or expired or send_secret or commits_published:
+        if expired or send_secret or commits_published:
             status = "closed"
 
         return {

@@ -112,6 +112,7 @@ def sync(handle=None):
         if handle is not None and _handle != handle:
             continue
         client = Mph.deserialize(hub_api, connection_data)
+        # FIXME auto close channel if needed
         result[_handle] = {
             "txids": client.update(),
             "received_payments": client.sync()
