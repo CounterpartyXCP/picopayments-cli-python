@@ -18,49 +18,107 @@ def version():
 
 @dispatcher.add_method
 def get_hub_status(asset=None):
+    """FIXME add doc string"""
     hub_api = _hub_api()
     assets = [asset] if asset else None
     return hub_api.mph_status(assets=assets)
 
 
 @dispatcher.add_method
-def get_balances(asset=None):
+def get_balances(asset=None, address=None):
+    """FIXME add doc string"""
     hub_api = _hub_api()
     assets = [asset] if asset else None
-    address = keys.address_from_wif(_load_wif())
+    if address is None:
+        address = keys.address_from_wif(_load_wif())
     return Mpc(hub_api).get_balances(address, assets=assets)
 
 
 @dispatcher.add_method
 def block_send(asset, destination, quantity, extra_btc=0):
+    """FIXME add doc string"""
     hub_api = _hub_api()
-    return Mpc(hub_api).block_send(
-        source=_load_wif(), destination=destination, asset=asset,
-        quantity=int(quantity), fee_per_kb=int(etc.fee_per_kb),
-        regular_dust_size=int(extra_btc or etc.regular_dust_size),
+    kwargs = dict(
+        source=_load_wif(),
+        destination=destination,
+        asset=asset,
+        quantity=int(quantity)
     )
+    if extra_btc > 0:
+        kwargs["regular_dust_size"] = extra_btc
+    return Mpc(hub_api).block_send(**kwargs)
 
 
 @dispatcher.add_method
 def connect(asset, quantity, expire_time=1024, delay_time=2):
+    """FIXME add doc string"""
     data = _load_data()
     client = Mph(_hub_api())
     send_deposit_txid = client.connect(quantity, expire_time=expire_time,
                                        asset=asset, delay_time=delay_time)
     data["connections"][client.handle] = client.serialize()
     _save_data(data)
-    return send_deposit_txid
+    return {
+        "send_deposit_txid": send_deposit_txid,
+        "handle": client.handle
+    }
 
 
 @dispatcher.add_method
-def get_status():
+def get_status(handle=None):
+    """FIXME add doc string"""
+    # FIXME have a short and verbose status
+    # FIXME include wallet balance
+    # FIXME include payment history
     data = _load_data()
-    result = {}
     hub_api = _hub_api()
-    for handle, connection_data in data["connections"].items():
+    result = {}
+    if handle:
+        connection_data = data["connections"][handle]
         client = Mph.deserialize(hub_api, connection_data)
         result[handle] = client.get_status()
+    else:
+        for handle, connection_data in data["connections"].items():
+            client = Mph.deserialize(hub_api, connection_data)
+            result[handle] = client.get_status()
     return result
+
+
+@dispatcher.add_method
+def sync(handle=None):
+    """FIXME add doc string"""
+    result = {}
+    data = _load_data()
+    hub_api = _hub_api()
+    if handle:
+        connection_data = data["connections"][handle]
+        client = Mph.deserialize(hub_api, connection_data)
+        result[handle] = {
+            "txids": client.update(),
+            "received_payments": client.sync()
+        }
+    else:
+        for handle, connection_data in data["connections"].items():
+            client = Mph.deserialize(hub_api, connection_data)
+            result[handle] = {
+                "txids": client.update(),
+                "received_payments": client.sync()
+            }
+    _save_data(data)
+    return result
+
+
+@dispatcher.add_method
+def close(handle):
+    """FIXME add doc string"""
+    # FIXME test it
+    data = _load_data()
+    hub_api = _hub_api()
+    client = Mph.deserialize(hub_api, data["connections"][handle])
+    txids = client.close()
+    data["connections"][handle] = client.serialize()
+    _save_data(data)
+    return txids
 
 
 @Request.application

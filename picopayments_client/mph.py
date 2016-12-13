@@ -19,7 +19,7 @@ class Mph(Mpc):
         "channel_terms",  # set once
         "client_pubkey",  # set once
         "hub_pubkey",  # set once
-        "secrets",  # append only
+        "secrets",  # FIXME save elsewhere!
         "c2h_state",  # mutable
         "c2h_spend_secret_hash",  # set once
         "c2h_commit_delay_time",  # set once

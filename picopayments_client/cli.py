@@ -55,6 +55,10 @@ def parse(args):
         '--asset', default=None, metavar="ASSET",
         help="Optionally filter for given asset."
     )
+    command_parser.add_argument(
+        '--address', default=None, metavar="ADDRESS",
+        help="Optionally provide address to check (wallet by default)"
+    )
 
     # blockchain send
     command_parser = subparsers.add_parser(
@@ -115,6 +119,20 @@ def parse(args):
     # get connections status
     command_parser = subparsers.add_parser(
         "get_status", help="Get status of connections."
+    )
+
+    # sync connections
+    command_parser = subparsers.add_parser(
+        "sync", help="Sync open connections and recover closed funds."
+    )
+
+    # close connection
+    command_parser = subparsers.add_parser(
+        "close", help="Close connection."
+    )
+    command_parser.add_argument(
+        'handle', metavar="HANDLE",
+        help="Handle of channel to close."
     )
 
     return vars(parser.parse_args(args=args)), parser

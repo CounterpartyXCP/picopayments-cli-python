@@ -20,8 +20,6 @@ hub_url = None
 hub_username = None
 hub_password = None
 hub_verify_ssl_cert = None
-regular_dust_size = None
-fee_per_kb = None
 
 
 def load(basedir, testnet):
@@ -53,8 +51,6 @@ def load(basedir, testnet):
         with open(config_path, 'w') as outfile:
             hub_port = 15000 if testnet else 5000
             config = {
-                "fee_per_kb": 50000,
-                "regular_dust_size": 5430,
                 "hub_url": "https://127.0.0.1:{0}/api/".format(hub_port),
                 "hub_username": None,
                 "hub_password": None,
