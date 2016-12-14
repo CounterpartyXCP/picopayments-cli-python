@@ -40,7 +40,7 @@ def parse(args):
 
     # get hub status
     command_parser = subparsers.add_parser(
-        "get_hub_status", help="Get current hub status."
+        "hub_status", help="Get current hub status."
     )
     command_parser.add_argument(
         '--asset', default=None, metavar="ASSET",
@@ -49,7 +49,7 @@ def parse(args):
 
     # get balances
     command_parser = subparsers.add_parser(
-        "get_balances", help="Get balances for wallet."
+        "balances", help="Get balances for wallet."
     )
     command_parser.add_argument(
         '--asset', default=None, metavar="ASSET",
@@ -83,7 +83,7 @@ def parse(args):
 
     # start rpc api server
     command_parser = subparsers.add_parser(
-        "serve_api", help="Start RPC-API server."
+        "serve", help="Start RPC-API server."
     )
     command_parser.add_argument(
         '--host', default="localhost", metavar="PORT",
@@ -118,7 +118,7 @@ def parse(args):
 
     # get connections status
     command_parser = subparsers.add_parser(
-        "get_status", help="Get status of connections."
+        "status", help="Get status of connections."
     )
     command_parser.add_argument(
         '--handle', default=None, metavar="HANDLE",

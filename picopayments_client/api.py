@@ -17,7 +17,7 @@ def version():
 
 
 @dispatcher.add_method
-def get_hub_status(asset=None):
+def hub_status(asset=None):
     """FIXME add doc string"""
     hub_api = _hub_api()
     assets = [asset] if asset else None
@@ -25,7 +25,7 @@ def get_hub_status(asset=None):
 
 
 @dispatcher.add_method
-def get_balances(asset=None, address=None):
+def balances(asset=None, address=None):
     """FIXME add doc string"""
     hub_api = _hub_api()
     assets = [asset] if asset else None
@@ -81,7 +81,7 @@ def _channel_status(hub_api, connection_data, verbose):
 
 
 @dispatcher.add_method
-def get_status(handle=None, verbose=False):
+def status(handle=None, verbose=False):
     """FIXME add doc string"""
     # FIXME have a short and verbose status
     data = _load_data()
@@ -90,7 +90,7 @@ def get_status(handle=None, verbose=False):
         "connections": {},
         "wallet": {
             "address": keys.address_from_wif(_load_wif()),
-            "balances": get_balances()
+            "balances": balances()
         }
     }
     for _handle, connection_data in data["connections"].items():
@@ -174,5 +174,5 @@ def _save_data(data):
         json.dump(data, outfile, indent=2, sort_keys=True)
 
 
-def serve_api(host=None, port=None):
+def serve(host=None, port=None):
     run_simple(host, port, _application)
