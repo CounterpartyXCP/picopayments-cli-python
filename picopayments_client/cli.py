@@ -62,7 +62,7 @@ def parse(args):
 
     # blockchain send
     command_parser = subparsers.add_parser(
-        "block_send", help="Send funds using a blockchain transaction."
+        "block_send", help="Send funds via blockchain transaction."
     )
     command_parser.add_argument(
         'asset', metavar="ASSET",
@@ -78,6 +78,27 @@ def parse(args):
     )
     command_parser.add_argument(
         '--extra_btc', type=int, default=0, metavar="SATOSHIS",
+        help="FIXME doc string"
+    )
+
+    # micro send
+    command_parser = subparsers.add_parser(
+        "micro_send", help="Send funds via micropayment channel."
+    )
+    command_parser.add_argument(
+        'source', metavar="SOURCE",
+        help="FIXME doc string"
+    )
+    command_parser.add_argument(
+        'destination', metavar="DESTINATION",
+        help="FIXME doc string"
+    )
+    command_parser.add_argument(
+        'quantity', type=int, metavar="QUANTITY",
+        help="FIXME doc string"
+    )
+    command_parser.add_argument(
+        '--token', default=None, metavar="STR",
         help="FIXME doc string"
     )
 

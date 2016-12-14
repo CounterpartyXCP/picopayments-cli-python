@@ -81,6 +81,18 @@ def _channel_status(hub_api, connection_data, verbose):
 
 
 @dispatcher.add_method
+def micro_send(source, destination, quantity, token):
+    """FIXME add doc string"""
+    hub_api = _hub_api()
+    data = _load_data()
+    client = Mph.deserialize(hub_api, data["connections"][source])
+    result = client.micro_send(destination, quantity, token=token)
+    data["connections"][source] = client.serialize()
+    _save_data(data)
+    return result
+
+
+@dispatcher.add_method
 def status(handle=None, verbose=False):
     """FIXME add doc string"""
     # FIXME have a short and verbose status
@@ -106,8 +118,8 @@ def status(handle=None, verbose=False):
 def sync(handle=None):
     """FIXME add doc string"""
     result = {}
-    data = _load_data()
     hub_api = _hub_api()
+    data = _load_data()
     for _handle, connection_data in data["connections"].items():
         if handle is not None and _handle != handle:
             continue
@@ -125,8 +137,8 @@ def sync(handle=None):
 def close(handle):
     """FIXME add doc string"""
     # FIXME test it
-    data = _load_data()
     hub_api = _hub_api()
+    data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][handle])
     txids = client.close()
     data["connections"][handle] = client.serialize()
