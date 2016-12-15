@@ -224,8 +224,7 @@ class Mpc(object):
         return txids
 
     def full_duplex_channel_status(self, handle, netcode, send_state,
-                                   recv_state, get_secret_func,
-                                   clearance=6):
+                                   recv_state, get_secret_func, clearance=6):
         assert(send_state["asset"] == recv_state["asset"])
         asset = send_state["asset"]
 

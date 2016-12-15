@@ -44,12 +44,12 @@ def parse(args):
     )
     command_parser.add_argument(
         '--asset', default=None, metavar="ASSET",
-        help="Optionally filter for given asset."
+        help="Optionally limit output to given asset."
     )
 
     # get balances
     command_parser = subparsers.add_parser(
-        "balances", help="Get balances for wallet."
+        "balances", help="Get balances for address or current wallet."
     )
     command_parser.add_argument(
         '--asset', default=None, metavar="ASSET",
@@ -57,7 +57,7 @@ def parse(args):
     )
     command_parser.add_argument(
         '--address', default=None, metavar="ADDRESS",
-        help="Optionally provide address to check (wallet by default)"
+        help="Optionally provide address to check, uses wallet by default"
     )
 
     # blockchain send
@@ -65,20 +65,40 @@ def parse(args):
         "block_send", help="Send funds via blockchain transaction."
     )
     command_parser.add_argument(
-        'asset', metavar="ASSET",
-        help="Optionally filter for given asset."
+        'asset', metavar="ASSET", help="Asset to send"
     )
     command_parser.add_argument(
         'destination', metavar="ADDRESS",
-        help="FIXME doc string"
+        help="Address to receive the funds"
     )
     command_parser.add_argument(
         'quantity', type=int, metavar="QUANTITY",
-        help="FIXME doc string"
+        help="Quantity of the given asset to transfer."
     )
     command_parser.add_argument(
         '--extra_btc', type=int, default=0, metavar="SATOSHIS",
-        help="FIXME doc string"
+        help="Optional bitcoin to also be sent."
+    )
+
+    # connect to hub
+    command_parser = subparsers.add_parser(
+        "connect", help="Create micropayment connection with hub."
+    )
+    command_parser.add_argument(
+        'asset', metavar="ASSET",
+        help="Asset to exchange in connection."
+    )
+    command_parser.add_argument(
+        'quantity', type=int, metavar="QUANTITY",
+        help="Quantity to be bound in the connection deposit."
+    )
+    command_parser.add_argument(
+        '--expire_time', type=int, default=1024, metavar="BLOCKS",
+        help="Time in blocks after which the deposit expires."
+    )
+    command_parser.add_argument(
+        '--delay_time', type=int, default=2, metavar="BLOCKS",
+        help="Blocks hub must wait before payout."
     )
 
     # micro send
@@ -87,19 +107,50 @@ def parse(args):
     )
     command_parser.add_argument(
         'source', metavar="SOURCE",
-        help="FIXME doc string"
+        help="Handle of connection to send funds from."
     )
     command_parser.add_argument(
         'destination', metavar="DESTINATION",
-        help="FIXME doc string"
+        help="Handle of connection to receive funds."
     )
     command_parser.add_argument(
         'quantity', type=int, metavar="QUANTITY",
-        help="FIXME doc string"
+        help="Quantity of channel asset to transfer."
     )
     command_parser.add_argument(
         '--token', default=None, metavar="STR",
-        help="FIXME doc string"
+        help="Optional token payee will receive with the payment."
+    )
+
+    # get connections status
+    command_parser = subparsers.add_parser(
+        "status", help="Get status of connections and wallet."
+    )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Optionally limit to given handle."
+    )
+    command_parser.add_argument(
+        '--verbose', action='store_true',
+        help="Optionally show additional information."
+    )
+
+    # sync connections
+    command_parser = subparsers.add_parser(
+        "sync", help="Sync open and recover funds from closed connections."
+    )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Optionally limit to given handle."
+    )
+
+    # close connection
+    command_parser = subparsers.add_parser(
+        "close", help="Close open connection and settle to blockchain."
+    )
+    command_parser.add_argument(
+        'handle', metavar="HANDLE",
+        help="Handle of connection to close."
     )
 
     # start rpc api server
@@ -114,58 +165,6 @@ def parse(args):
     command_parser.add_argument(
         '--port', type=int, default=default, metavar="PORT",
         help="RPC-API server port: {0}".format(default)
-    )
-
-    # connect to hub
-    command_parser = subparsers.add_parser(
-        "connect", help="Create micropayment connection with hub."
-    )
-    command_parser.add_argument(
-        'asset', metavar="ASSET",
-        help="Optionally filter for given asset."
-    )
-    command_parser.add_argument(
-        'quantity', type=int, metavar="QUANTITY",
-        help="FIXME doc string"
-    )
-    command_parser.add_argument(
-        '--expire_time', type=int, default=1024, metavar="BLOCKS",
-        help="FIXME doc string"
-    )
-    command_parser.add_argument(
-        '--delay_time', type=int, default=2, metavar="BLOCKS",
-        help="FIXME doc string"
-    )
-
-    # get connections status
-    command_parser = subparsers.add_parser(
-        "status", help="Get status of connections."
-    )
-    command_parser.add_argument(
-        '--handle', default=None, metavar="HANDLE",
-        help="Only show status for given handle."
-    )
-    command_parser.add_argument(
-        '--verbose', action='store_true',
-        help="Verbose connection status output."
-    )
-
-    # sync connections
-    command_parser = subparsers.add_parser(
-        "sync", help="Sync open connections and recover closed funds."
-    )
-    command_parser.add_argument(
-        '--handle', default=None, metavar="HANDLE",
-        help="Handle of channel to sync."
-    )
-
-    # close connection
-    command_parser = subparsers.add_parser(
-        "close", help="Close connection."
-    )
-    command_parser.add_argument(
-        'handle', metavar="HANDLE",
-        help="Handle of channel to close."
     )
 
     return vars(parser.parse_args(args=args)), parser

@@ -18,4 +18,4 @@ PicoPayments Client
 .. _IssuesLink: https://github.com/F483/picopayments-client-python/issues
 
 
-Decentral micropayment hub client for counterparty assets.
+Micropayment hub client for counterparty assets.

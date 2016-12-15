@@ -13,12 +13,63 @@ from micropayment_core import keys
 
 @dispatcher.add_method
 def version():
+    """ Returns current version of number. """
     return __version__
 
 
 @dispatcher.add_method
 def hub_status(asset=None):
-    """FIXME add doc string"""
+    """ Get current hub status.
+
+    Args:
+        asset (str): Optionally limit output to given asset.
+
+    Returns:
+        List of open connections, current terms, funding addresses
+        and current liquidity for new connections.
+
+        {
+          "connections": {
+            "a0b1156206d1f68edb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
+              "asset": "XCP",
+              "balance": 31338,
+              "status": "open",
+              "ttl": 401
+            }
+          },
+          "current_terms": {
+            "XCP": {
+              "deposit_max": 0,
+              "deposit_min": 0,
+              "deposit_ratio": 1.0,
+              "expire_max": 0,
+              "expire_min": 0,
+              "sync_fee": 1
+            }
+          },
+          "funding_addresses": {
+            "BTC": "mhzPMMC3hkQUL9HUYY13s2NehEJXCA923Z",
+            "XCP": "n1f73Cvxi7KFWK5p7W8F6JYbyQxV5djqUo"
+          },
+          "liquidity": {
+            "addresses": {
+              "XCP": [
+                {
+                  "address": "mzEPqJet1LvZK5wjeDqmYx4udC3zx9oFwm",
+                  "balances": {
+                    "BTC": 333600,
+                    "XCP": 399876544
+                  }
+                }
+              ]
+            },
+            "total": {
+              "BTC": 807814,
+              "XCP": 599845207
+            }
+          }
+        }
+    """
     hub_api = _hub_api()
     assets = [asset] if asset else None
     return hub_api.mph_status(assets=assets)
@@ -26,7 +77,22 @@ def hub_status(asset=None):
 
 @dispatcher.add_method
 def balances(asset=None, address=None):
-    """FIXME add doc string"""
+    """ Get balances for address or current wallet.
+
+    Args:
+        asset (str, default=None): Optionally filter for given asset.
+        address (str, default=None): Optionally provide address to check,
+                                     uses wallet by default
+
+    Returns:
+        Dict mapping asset to available quantity in satoshis,
+        Unconfirmed assets are ignored.
+
+        {
+            "BTC": 926109330,
+            "XCP": 140982404156
+        }
+    """
     hub_api = _hub_api()
     assets = [asset] if asset else None
     if address is None:
@@ -36,7 +102,17 @@ def balances(asset=None, address=None):
 
 @dispatcher.add_method
 def block_send(asset, destination, quantity, extra_btc=0):
-    """FIXME add doc string"""
+    """ Send funds using via blockchain transaction.
+
+    Args:
+        asset (str): Asset to send.
+        destination (address): Address to receive the funds.
+        quantity (int): Quantity of the given asset to transfer.
+        extra_btc (int, default=0): Optional bitcoin to also be sent.
+
+    Returns:
+        txid of published transaction.
+    """
     hub_api = _hub_api()
     kwargs = dict(
         source=_load_wif(),
@@ -51,7 +127,23 @@ def block_send(asset, destination, quantity, extra_btc=0):
 
 @dispatcher.add_method
 def connect(asset, quantity, expire_time=1024, delay_time=2):
-    """FIXME add doc string"""
+    """ Create micropayment connection with hub.
+
+    Args:
+        asset (str): Asset to exchange in connection.
+        quantity (str): Quantity to be bound in the deposit, this determins
+                        the maximum amount that can bet transferred.
+        expire_time (int, default=1024): Time in blocks after which the
+                                         deposit expires and can be recovered.
+        delay_time (int, default=2): Blocks hub must wait before payout,
+                                     protects against publish revoked commits.
+
+    Returns:
+        {
+            "send_deposit_txid": "published bitcoin transaction id",
+            "handle": "handle for created connection"
+        }
+    """
     data = _load_data()
     client = Mph(_hub_api())
     send_deposit_txid = client.connect(quantity, expire_time=expire_time,
@@ -64,25 +156,19 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
     }
 
 
-def _channel_status(hub_api, connection_data, verbose):
-    client = Mph.deserialize(hub_api, connection_data)
-    status = client.get_status()
-    if verbose:
-        status["data"] = connection_data
-        return status
-    else:
-        return {
-            "asset": status["asset"],
-            "balance": status["balance"],
-            "ttl": status["ttl"],
-            "status": status["status"]
-        }
-
-
-
 @dispatcher.add_method
-def micro_send(source, destination, quantity, token):
-    """FIXME add doc string"""
+def micro_send(source, destination, quantity, token=None):
+    """ Send fund to via micropayment channel.
+
+    Args:
+        source (str): Handle of connection to send funds from.
+        destination (str): Handle of connection to receive funds.
+        quantity (int): Quantity of channel asset to transfer.
+        token (str, default=None): Optional token payee will
+                                   receive with the payment.
+
+    Returns: Provided token or generated token if None given.
+    """
     hub_api = _hub_api()
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][source])
@@ -94,8 +180,31 @@ def micro_send(source, destination, quantity, token):
 
 @dispatcher.add_method
 def status(handle=None, verbose=False):
-    """FIXME add doc string"""
-    # FIXME have a short and verbose status
+    """ Get status of connections and wallet.
+
+    Args:
+        handle (str, default=None): Optionally limit to given handle.
+        verbose (bool, default=False): Optionally show additional information.
+
+    Returns:
+        {
+          "connections": {
+            "a0b1156206d1f68edb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
+              "asset": "XCP",
+              "balance": 31337,
+              "status": "open",
+              "ttl": 404
+            }
+          },
+          "wallet": {
+            "address": "n2WQGAvnDS1vf7uXToLou6kLxJXRGFHo2b",
+            "balances": {
+              "BTC": 926109330,
+              "XCP": 140982404156
+            }
+          }
+        }
+    """
     data = _load_data()
     hub_api = _hub_api()
     result = {
@@ -108,15 +217,47 @@ def status(handle=None, verbose=False):
     for _handle, connection_data in data["connections"].items():
         if handle is not None and _handle != handle:
             continue
-        result["connections"][_handle] = _channel_status(
-            hub_api, connection_data, verbose
-        )
+        client = Mph.deserialize(hub_api, connection_data)
+        status = client.get_status()
+        if verbose:
+            status["data"] = connection_data
+            result["connections"][_handle] = status
+        else:
+            result["connections"][_handle] = {
+                "asset": status["asset"],
+                "balance": status["balance"],
+                "ttl": status["ttl"],
+                "status": status["status"]
+            }
     return result
 
 
 @dispatcher.add_method
 def sync(handle=None):
-    """FIXME add doc string"""
+    """ Sync open and recover funds from closed connections.
+
+    This WILL cost a fee per channnel synced as defined in the hub terms.
+
+    * Synchronize open connections to send/receive payments.
+    * Recover funds of closed connections.
+
+    Args:
+        handle (str, default=None): Optionally limit to given handle.
+
+    Returns:
+        {
+          "connection handle": {
+            "txids": ["of transactions publish while recovering funds"],
+            "received_payments": [
+              {
+                "payer_handle": "sender handle",
+                "amount": 1337,
+                "token": "provided by sender"
+              }
+            ]
+          }
+        }
+    """
     result = {}
     hub_api = _hub_api()
     data = _load_data()
@@ -124,26 +265,43 @@ def sync(handle=None):
         if handle is not None and _handle != handle:
             continue
         client = Mph.deserialize(hub_api, connection_data)
-        # FIXME auto close channel if needed
-        result[_handle] = {
-            "txids": client.update(),
-            "received_payments": client.sync()
-        }
+        status = client.get_status()
+
+        # sync open connections
+        if status["status"] == "open":
+            result[_handle] = {
+                "txids": [],
+                "received_payments": client.sync()
+            }
+
+        # update closed connections
+        if status["status"] == "closed":
+            result[_handle] = {
+                "txids": client.update(),
+                "received_payments": []
+            }
+
     _save_data(data)
     return result
 
 
 @dispatcher.add_method
 def close(handle):
-    """FIXME add doc string"""
-    # FIXME test it
+    """ Close open connection and settle to blockchain.
+
+    Args:
+        handle (str): Handle of connection to close.
+
+    Returns:
+        Commit txid or None if no assets received from hub.
+    """
     hub_api = _hub_api()
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][handle])
-    txids = client.close()
+    commit_txid = client.close()
     data["connections"][handle] = client.serialize()
     _save_data(data)
-    return txids
+    return commit_txid
 
 
 @Request.application
@@ -186,5 +344,11 @@ def _save_data(data):
         json.dump(data, outfile, indent=2, sort_keys=True)
 
 
-def serve(host=None, port=None):
+def serve(host, port):
+    """ Start RPC-API Server.
+
+    Args:
+        host (str): Network interface on which to host the service.
+        port (int): Network port on which to host the service.
+    """
     run_simple(host, port, _application)

@@ -163,10 +163,7 @@ class Mph(Mpc):
             })
 
     def close(self):
-        txids = []
         commit_txid = self.finalize_commit(self._get_wif, self.h2c_state)
-        if commit_txid is not None:
-            txids.append(commit_txid)
 
         # get h2c spend secret if no commits for channel
         h2c_spend_secret = None
@@ -185,7 +182,7 @@ class Mph(Mpc):
             secret_hash = util.hash160hex(c2h_spend_secret)
             self.secrets[secret_hash] = c2h_spend_secret
 
-        return txids
+        return commit_txid
 
     def is_closed(self, clearance=6):
         c2h = self.c2h_state
