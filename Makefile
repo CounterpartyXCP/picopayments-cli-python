@@ -25,7 +25,6 @@ help:
 	@echo "  wheel          Build package wheel & save in $(WHEEL_DIR)."
 	@echo "  wheels         Build dependency wheels & save in $(WHEEL_DIR)."
 	@echo "  publish        Build and upload package to pypi.python.org"
-	@echo "  graphs         Generate graphs"
 	@echo ""
 	@echo "VARIABLES:"
 	@echo "  PY_VERSION     Version of python to use. Default: $(PY_VERSION)"
@@ -71,10 +70,6 @@ setup: virtualenv
 	$(PY) setup.py develop
 
 
-sandbox: setup
-	$(PY) tools/sandbox.py
-
-
 shell: install
 	env/bin/ipython
 
@@ -95,12 +90,8 @@ publish: test
 	$(PY) setup.py register bdist_wheel upload
 
 
-view_readme: setup graphs
+view_readme:
 	env/bin/restview README.rst
-
-
-graphs:
-	ditaa schema.ditaa schema.png
 
 
 bitcoind_startserver:

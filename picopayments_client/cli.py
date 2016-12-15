@@ -40,7 +40,7 @@ def parse(args):
 
     # get hub status
     command_parser = subparsers.add_parser(
-        "hub_status", help="Get current hub status."
+        "hubstatus", help="Get current hub status."
     )
     command_parser.add_argument(
         '--asset', default=None, metavar="ASSET",
@@ -62,7 +62,7 @@ def parse(args):
 
     # blockchain send
     command_parser = subparsers.add_parser(
-        "block_send", help="Send funds via blockchain transaction."
+        "blocksend", help="Send funds via blockchain transaction."
     )
     command_parser.add_argument(
         'asset', metavar="ASSET", help="Asset to send"
@@ -103,7 +103,7 @@ def parse(args):
 
     # micro send
     command_parser = subparsers.add_parser(
-        "micro_send", help="Send funds via micropayment channel."
+        "microsend", help="Send funds via micropayment channel."
     )
     command_parser.add_argument(
         'source', metavar="SOURCE",

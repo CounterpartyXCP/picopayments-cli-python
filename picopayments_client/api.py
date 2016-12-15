@@ -18,7 +18,7 @@ def version():
 
 
 @dispatcher.add_method
-def hub_status(asset=None):
+def hubstatus(asset=None):
     """ Get current hub status.
 
     Args:
@@ -30,7 +30,7 @@ def hub_status(asset=None):
 
         {
           "connections": {
-            "a0b1156206d1f68edb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
+            "a0b1156206dedb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
               "asset": "XCP",
               "balance": 31338,
               "status": "open",
@@ -101,7 +101,7 @@ def balances(asset=None, address=None):
 
 
 @dispatcher.add_method
-def block_send(asset, destination, quantity, extra_btc=0):
+def blocksend(asset, destination, quantity, extra_btc=0):
     """ Send funds using via blockchain transaction.
 
     Args:
@@ -157,7 +157,7 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
 
 
 @dispatcher.add_method
-def micro_send(source, destination, quantity, token=None):
+def microsend(source, destination, quantity, token=None):
     """ Send fund to via micropayment channel.
 
     Args:
@@ -167,7 +167,8 @@ def micro_send(source, destination, quantity, token=None):
         token (str, default=None): Optional token payee will
                                    receive with the payment.
 
-    Returns: Provided token or generated token if None given.
+    Returns:
+        Provided token or generated token if None given.
     """
     hub_api = _hub_api()
     data = _load_data()
@@ -189,7 +190,7 @@ def status(handle=None, verbose=False):
     Returns:
         {
           "connections": {
-            "a0b1156206d1f68edb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
+            "a0b206d1f68edb1aa24084752b5693a9022349dc547fb9952aa510003e93": {
               "asset": "XCP",
               "balance": 31337,
               "status": "open",
