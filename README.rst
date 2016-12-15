@@ -34,11 +34,13 @@ hubstatus
 
 Get current hub status.
 
-Args:
+Arguments
+---------
 
  * asset (str): Optionally limit output to given asset.
 
-Returns:
+Returns
+-------
 
 .. code::
 
@@ -92,12 +94,14 @@ balances
 
 Get balances for address or current wallet.
 
-Args:
+Arguments
+---------
 
  * asset (str, default=None): Optionally filter for given asset.
  * address (str, default=None): Optionally provide address to check, uses wallet by default
 
-Returns:
+Returns
+-------
 
 .. code::
 
@@ -115,14 +119,16 @@ blocksend
 
 Send funds using via blockchain transaction.
 
-Args:
+Arguments
+---------
 
  * asset (str): Asset to send.
  * destination (address): Address to receive the funds.
  * quantity (int): Quantity of the given asset to transfer.
  * extra_btc (int, default=0): Optional bitcoin to also be sent.
 
-Returns:
+Returns
+-------
 
 .. code::
 
@@ -133,14 +139,16 @@ connect
 
 Create micropayment connection with hub.
 
-Args:
+Arguments
+---------
 
  * asset (str): Asset to exchange in connection.
  * quantity (str): Quantity to be bound in the deposit, this determins the maximum amount that can bet transferred.
  * expire_time (int, default=1024): Time in blocks after which the deposit expires and can be recovered.
  * delay_time (int, default=2): Blocks hub must wait before payout, protects against publish revoked commits.
 
-Returns:
+Returns
+-------
 
 .. code::
 
@@ -155,14 +163,16 @@ microsend
 
 Send fund to via micropayment channel.
 
-Args:
+Arguments
+---------
 
  * source (str): Handle of connection to send funds from.
  * destination (str): Handle of connection to receive funds.
  * quantity (int): Quantity of channel asset to transfer.
  * token (str, default=None): Optional token payee will receive with the payment.
 
-Returns: 
+Returns
+-------
 
 .. code::
 
@@ -174,12 +184,14 @@ status
 
 Get status of connections and wallet.
 
-Args:
+Arguments
+---------
 
  * handle (str, default=None): Optionally limit to given handle.
  * verbose (bool, default=False): Optionally show additional information.
 
-Returns:
+Returns
+-------
 
 .. code::
 
@@ -212,11 +224,13 @@ This WILL cost a fee per channnel synced as defined in the hub terms.
  * Synchronize open connections to send/receive payments.
  * Recover funds of closed connections.
 
-Args:
+Arguments
+---------
 
  * handle (str, default=None): Optionally limit to given handle.
 
-Returns:
+Returns
+-------
 
 .. code::
 
