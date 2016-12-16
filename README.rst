@@ -1,27 +1,29 @@
-###################
-PicoPayments Client
-###################
+################
+PicoPayments CLI
+################
 
 |BuildLink|_ |CoverageLink|_ |LicenseLink|_ |IssuesLink|_
 
 
-.. |BuildLink| image:: https://travis-ci.org/StorjRND/picopayments-client-python.svg
-.. _BuildLink: https://travis-ci.org/StorjRND/picopayments-client-python
+.. |BuildLink| image:: https://travis-ci.org/StorjRND/picopayments-cli-python.svg
+.. _BuildLink: https://travis-ci.org/StorjRND/picopayments-cli-python
 
-.. |CoverageLink| image:: https://coveralls.io/repos/StorjRND/picopayments-client-python/badge.svg
-.. _CoverageLink: https://coveralls.io/r/StorjRND/picopayments-client-python
+.. |CoverageLink| image:: https://coveralls.io/repos/StorjRND/picopayments-cli-python/badge.svg
+.. _CoverageLink: https://coveralls.io/r/StorjRND/picopayments-cli-python
 
 .. |LicenseLink| image:: https://img.shields.io/badge/license-MIT-blue.svg
-.. _LicenseLink: https://raw.githubusercontent.com/F483/picopayments-client-python/master/LICENSE
+.. _LicenseLink: https://raw.githubusercontent.com/F483/picopayments-cli-python/master/LICENSE
 
-.. |IssuesLink| image:: https://img.shields.io/github/issues/F483/picopayments-client-python.svg
-.. _IssuesLink: https://github.com/F483/picopayments-client-python/issues
+.. |IssuesLink| image:: https://img.shields.io/github/issues/F483/picopayments-cli-python.svg
+.. _IssuesLink: https://github.com/F483/picopayments-cli-python/issues
 
 
-Micropayment hub client for counterparty assets.
+Micropayment hub CLI interface for counterparty assets.
+
 
 API Calls
 #########
+
 
 version
 =======
@@ -34,10 +36,12 @@ hubstatus
 
 Get current hub status.
 
+
 Arguments
 ---------
 
  * asset (str): Optionally limit output to given asset.
+
 
 Returns
 -------
@@ -89,16 +93,19 @@ Returns
       }
     }
 
+
 balances
 ========
 
 Get balances for address or current wallet.
+
 
 Arguments
 ---------
 
  * asset (str, default=None): Optionally filter for given asset.
  * address (str, default=None): Optionally provide address to check, uses wallet by default
+
 
 Returns
 -------
@@ -119,6 +126,7 @@ blocksend
 
 Send funds using via blockchain transaction.
 
+
 Arguments
 ---------
 
@@ -127,6 +135,7 @@ Arguments
  * quantity (int): Quantity of the given asset to transfer.
  * extra_btc (int, default=0): Optional bitcoin to also be sent.
 
+
 Returns
 -------
 
@@ -134,10 +143,12 @@ Returns
 
     txid of published transaction.
 
+
 connect
 =======
 
 Create micropayment connection with hub.
+
 
 Arguments
 ---------
@@ -146,6 +157,7 @@ Arguments
  * quantity (str): Quantity to be bound in the deposit, this determins the maximum amount that can bet transferred.
  * expire_time (int, default=1024): Time in blocks after which the deposit expires and can be recovered.
  * delay_time (int, default=2): Blocks hub must wait before payout, protects against publish revoked commits.
+
 
 Returns
 -------
@@ -163,6 +175,7 @@ microsend
 
 Send fund to via micropayment channel.
 
+
 Arguments
 ---------
 
@@ -170,6 +183,7 @@ Arguments
  * destination (str): Handle of connection to receive funds.
  * quantity (int): Quantity of channel asset to transfer.
  * token (str, default=None): Optional token payee will receive with the payment.
+
 
 Returns
 -------
@@ -184,11 +198,13 @@ status
 
 Get status of connections and wallet.
 
+
 Arguments
 ---------
 
  * handle (str, default=None): Optionally limit to given handle.
  * verbose (bool, default=False): Optionally show additional information.
+
 
 Returns
 -------
@@ -224,10 +240,12 @@ This WILL cost a fee per channnel synced as defined in the hub terms.
  * Synchronize open connections to send/receive payments.
  * Recover funds of closed connections.
 
+
 Arguments
 ---------
 
  * handle (str, default=None): Optionally limit to given handle.
+
 
 Returns
 -------

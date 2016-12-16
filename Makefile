@@ -75,13 +75,13 @@ shell: install
 
 
 test: setup
-	$(AUTOPEP8) --in-place --aggressive --aggressive --recursive picopayments_client
+	$(AUTOPEP8) --in-place --aggressive --aggressive --recursive picopayments_cli
 	$(AUTOPEP8) --in-place --aggressive --aggressive --recursive tests
-	$(PEP8) picopayments_client
+	$(PEP8) picopayments_cli
 	$(PEP8) tests
-	# $(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_client -vv --capture=no --pdb tests/standard_usage_test.py::test_standard_usage
-	$(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_client -vv
-	# $(COVERAGE) run --source=picopayments_client setup.py test
+	# $(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_cli -vv --capture=no --pdb tests/standard_usage_test.py::test_standard_usage
+	$(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_cli -vv
+	# $(COVERAGE) run --source=picopayments_cli setup.py test
 	# $(COVERAGE) html
 	# $(COVERAGE) report --fail-under=90
 

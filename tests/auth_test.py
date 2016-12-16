@@ -1,6 +1,6 @@
 import unittest
 from micropayment_core import keys
-from picopayments_client import auth
+from picopayments_cli import auth
 
 
 class TestAuth(unittest.TestCase):

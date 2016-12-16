@@ -6,9 +6,9 @@
 
 import json
 import sys
-from picopayments_client import cli
-from picopayments_client import api
-from picopayments_client import etc
+from picopayments_cli import cli
+from picopayments_cli import api
+from picopayments_cli import etc
 
 
 if __name__ == "__main__":

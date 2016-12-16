@@ -3,11 +3,11 @@ import json
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 from jsonrpc import JSONRPCResponseManager, dispatcher
-from picopayments_client.rpc import JsonRpc
-from picopayments_client.mpc import Mpc
-from picopayments_client.mph import Mph
-from picopayments_client import etc
-from picopayments_client import __version__
+from picopayments_cli.rpc import JsonRpc
+from picopayments_cli.mpc import Mpc
+from picopayments_cli.mph import Mph
+from picopayments_cli import etc
+from picopayments_cli import __version__
 from micropayment_core import keys
 
 

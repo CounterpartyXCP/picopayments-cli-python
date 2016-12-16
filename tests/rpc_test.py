@@ -1,6 +1,6 @@
 import unittest
 from tests.mock_rpc_server import start
-from picopayments_client import rpc
+from picopayments_cli import rpc
 
 
 class TestRpc(unittest.TestCase):

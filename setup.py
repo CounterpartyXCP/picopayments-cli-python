@@ -5,15 +5,15 @@
 from setuptools import setup, find_packages
 
 
-exec(open('picopayments_client/version.py').read())  # load __version__
+exec(open('picopayments_cli/version.py').read())  # load __version__
 
 
 setup(
-    name='picopayments_client',
-    scripts=['picopayments_client/bin/picopayments-client'],
+    name='picopayments-cli',
+    scripts=['picopayments_cli/bin/picopayments-cli'],
     description="Micropayment hub client for counterparty assets.",
     long_description=open("README.rst").read(),
-    keywords="storj, counterparty, micropayment, hub",
+    keywords="storj, counterparty, micropayment, client",
     url='http://storj.io',
     author='Fabian Barkhau',
     author_email='f483@storj.io',
@@ -21,7 +21,7 @@ setup(
     version=__version__,  # NOQA
     test_suite="tests",
     dependency_links=[],
-    package_data={'picopayments_client': []},
+    package_data={'picopayments_cli': []},
     include_package_data=True,
     install_requires=open("requirements.txt").readlines(),
     tests_require=open("requirements_tests.txt").readlines(),

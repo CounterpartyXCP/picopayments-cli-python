@@ -3,7 +3,7 @@ from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from multiprocessing import Process
-from picopayments_client import auth
+from picopayments_cli import auth
 
 
 @dispatcher.add_method

@@ -11,7 +11,7 @@ from micropayment_core import scripts
 class Mpc(object):
 
     def __init__(self, api):
-        self.api = api  # picopayments_client.rpc.API instance
+        self.api = api  # picopayments_cli.rpc.API instance
 
     def get_rawtx(self, txid):
         """TODO doc string"""
