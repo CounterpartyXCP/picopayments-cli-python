@@ -1,4 +1,5 @@
 import os
+import copy
 import json
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
@@ -144,12 +145,17 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
             "handle": "handle for created connection"
         }
     """
-    data = _load_data()
+
+    # connect to hub
     client = Mph(_hub_api())
     send_deposit_txid = client.connect(quantity, expire_time=expire_time,
                                        asset=asset, delay_time=delay_time)
+
+    # save to data
+    data = _load_data()
     data["connections"][client.handle] = client.serialize()
     _save_data(data)
+
     return {
         "send_deposit_txid": send_deposit_txid,
         "handle": client.handle
@@ -262,7 +268,7 @@ def sync(handle=None):
     result = {}
     hub_api = _hub_api()
     data = _load_data()
-    for _handle, connection_data in data["connections"].items():
+    for _handle, connection_data in copy.deepcopy(data)["connections"].items():
         if handle is not None and _handle != handle:
             continue
         client = Mph.deserialize(hub_api, connection_data)
@@ -276,11 +282,15 @@ def sync(handle=None):
             }
 
         # update closed connections
-        if status["status"] == "closed":
+        elif status["status"] == "closed":
             result[_handle] = {
                 "txids": client.update(),
                 "received_payments": []
             }
+
+            # FIXME remove connection if all funds recovered
+
+        data["connections"][client.handle] = client.serialize()
 
     _save_data(data)
     return result
@@ -300,6 +310,7 @@ def close(handle):
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][handle])
     commit_txid = client.close()
+    # FIXME recover now if possible
     data["connections"][handle] = client.serialize()
     _save_data(data)
     return commit_txid
