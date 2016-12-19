@@ -210,7 +210,7 @@ class Mpc(object):
         rtxs = self.api.mpc_recoverables(state=send_state,
                                          spend_secret=send_spend_secret)
         for revoke_tx in rtxs["revoke"]:
-            txids.append(self.recover_revoke(
+            txids.append(self.recover_revoked(
                 get_wif_func=get_wif_func, **revoke_tx
             ))
         for change_tx in rtxs["change"]:

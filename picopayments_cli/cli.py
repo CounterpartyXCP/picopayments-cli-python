@@ -103,7 +103,7 @@ def parse(args):
 
     # micro send
     command_parser = subparsers.add_parser(
-        "microsend", help="Send funds via micropayment channel."
+        "queuepayment", help="Queue micropayment channel send (sent on sync)."
     )
     command_parser.add_argument(
         'source', metavar="SOURCE",
@@ -137,7 +137,7 @@ def parse(args):
 
     # sync connections
     command_parser = subparsers.add_parser(
-        "sync", help="Sync open and recover funds from closed connections."
+        "sync", help="Sync payments and recover funds from closed connections."
     )
     command_parser.add_argument(
         '--handle', default=None, metavar="HANDLE",

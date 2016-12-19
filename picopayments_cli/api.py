@@ -163,8 +163,8 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
 
 
 @dispatcher.add_method
-def microsend(source, destination, quantity, token=None):
-    """ Send fund to via micropayment channel.
+def queuepayment(source, destination, quantity, token=None):
+    """ Queue micropayment channel send (sent on sync).
 
     Args:
         source (str): Handle of connection to send funds from.
@@ -179,6 +179,7 @@ def microsend(source, destination, quantity, token=None):
     hub_api = _hub_api()
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][source])
+    # FIXME check dest can receive payment
     result = client.micro_send(destination, quantity, token=token)
     data["connections"][source] = client.serialize()
     _save_data(data)
@@ -241,7 +242,7 @@ def status(handle=None, verbose=False):
 
 @dispatcher.add_method
 def sync(handle=None):
-    """ Sync open and recover funds from closed connections.
+    """ Sync payments and recover funds from closed connections.
 
     This WILL cost a fee per channnel synced as defined in the hub terms.
 
