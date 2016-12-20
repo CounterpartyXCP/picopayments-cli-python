@@ -20,9 +20,52 @@ PicoPayments CLI
 
 Micropayment hub CLI interface for counterparty assets.
 
+Setup
+#####
 
-API Calls
-#########
+.. code:: bash
+
+    $ pip install picopayments-cli
+
+
+Usage
+#####
+
+.. code:: bash
+
+    $ picopayments-cli [config argumants] <command> [command arguments]
+
+
+Usage examples
+==============
+
+
+.. code:: bash
+
+    # show help text
+    $ picopayments-cli --help
+
+    # show help text for command
+    $ picopayments-cli <command> --help
+
+    # connect to hub
+    $ picopayments-cli --testnet connect ASSET QUANTITY
+
+    # Show status of current connections
+    $ picopayments-cli --testnet status
+
+    # queue payment
+    $ picopayments-cli --testnet queuepayment SOURCEHANDLE DESTINATIONHANDLE QUANTITY
+
+    # sync payments
+    $ picopayments-cli --testnet sync
+
+    # close payment channel
+    $ picopayments-cli --testnet close HANDLE
+
+
+API Calls/Commands
+##################
 
 
 version
@@ -170,10 +213,10 @@ Returns
     }
 
 
-microsend
-=========
+queuepayment
+============
 
-Send fund to via micropayment channel.
+Queue micropayment channel send (sent on sync).
 
 
 Arguments

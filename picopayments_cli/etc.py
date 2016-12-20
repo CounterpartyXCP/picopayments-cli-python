@@ -49,12 +49,15 @@ def load(basedir, testnet):
     # create config if it does not exist
     else:
         with open(config_path, 'w') as outfile:
-            hub_port = 15000 if testnet else 5000
+            port = 15000 if testnet else 5000
+            subdomain = "micro.test" if testnet else "micro"
             config = {
-                "hub_url": "https://127.0.0.1:{0}/api/".format(hub_port),
+                "hub_url": "https://{subdomain}.storj.io:{port}/api/".format(
+                    subdomain=subdomain, port=port
+                ),
                 "hub_username": None,
                 "hub_password": None,
-                "hub_verify_ssl_cert": False,
+                "hub_verify_ssl_cert": True,
             }
             json.dump(config, outfile, indent=2, sort_keys=True)
 
