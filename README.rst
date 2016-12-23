@@ -48,11 +48,11 @@ Usage examples
     # show help text for command
     $ picopayments-cli <command> --help
 
-    # connect to hub
-    $ picopayments-cli --testnet connect ASSET QUANTITY
-
     # Show status of current connections
     $ picopayments-cli --testnet status
+
+    # connect to hub
+    $ picopayments-cli --testnet connect ASSET QUANTITY
 
     # queue payment
     $ picopayments-cli --testnet queuepayment SOURCEHANDLE DESTINATIONHANDLE QUANTITY
@@ -313,3 +313,58 @@ close
 =====
 
 Close open connection and settle to blockchain.
+
+
+Testing guide
+#############
+
+Please be liberal in opening an issue here on this github project with any
+problems or questions you have, well repsond as soon as I can.
+
+Please note that all testing is currently on testnet only using the
+counterparty XCP asset.
+
+
+.. code:: bash
+
+    # install the picopayments cli client (sorry no gui wallet just yet)
+    $ pip install picopayments-cli
+    
+    # show version and setup config files and wallet
+    $ picopayments-cli --testnet status
+
+    # show hub configuration
+    $ cat ~/.picopayments/testnet.cfg
+    # change the hub_verify_ssl_cert setting to false, havnt setup cert yet :/
+
+    # Show status of current connections and wallet
+    $ picopayments-cli --testnet status
+    # post the wallet address in https://community.storj.io/channel/micropayments-testing and you will be sent some funds for testing
+
+    # connect to hub (prints the hex handle of the created channel)
+    $ picopayments-cli --testnet connect XCP 1000000
+
+    # you will have to wait until your deposit is confirmed, then the hub
+    # will match your deposit so you can recieve funds. After the hub deposit
+    # is confirmed the micropayment channel is open for use.
+
+    # Show status of current connections
+    $ picopayments-cli --testnet status
+
+    # queue payment
+    $ picopayments-cli --testnet queuepayment SOURCEHANDLE DESTINATIONHANDLE QUANTITY
+
+    # do not send more then you have or the other party can receive or it
+    # will mess up the channel (known issue I have to fix)
+
+    # sync payments (cost 1 xcp fee)
+    $ picopayments-cli --testnet sync
+    
+    # close payment channel and settle to blockchain
+    $ picopayments-cli --testnet close HANDLE
+
+
+FAQ
+###
+
+TODO answered questions
