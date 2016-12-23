@@ -348,8 +348,11 @@ counterparty XCP asset.
     # will match your deposit so you can recieve funds. After the hub deposit
     # is confirmed the micropayment channel is open for use.
 
-    # Show status of current connections
+    # Show status of current connections and wallet
     $ picopayments-cli --testnet status
+    
+    # Show hub status: open connections, liquidity, terms and funding addresses
+    $ picopayments-cli --testnet hubstatus
 
     # queue payment
     $ picopayments-cli --testnet queuepayment SOURCEHANDLE DESTINATIONHANDLE QUANTITY
