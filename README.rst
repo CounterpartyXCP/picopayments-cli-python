@@ -20,12 +20,15 @@ PicoPayments CLI
 
 Micropayment hub CLI interface for counterparty assets.
 
+Currently Python 3 is the supported version.
+
+
 Setup
 #####
 
 .. code:: bash
 
-    $ pip install picopayments-cli
+    $ pip3 install picopayments-cli
 
 
 Usage
@@ -328,7 +331,7 @@ counterparty XCP asset.
 .. code:: bash
 
     # install the picopayments cli client (sorry no gui wallet just yet)
-    $ pip install picopayments-cli
+    $ pip3 install picopayments-cli
     
     # show version and setup config files and wallet
     $ picopayments-cli --testnet status
