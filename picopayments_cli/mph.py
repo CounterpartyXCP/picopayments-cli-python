@@ -5,6 +5,7 @@
 
 import os
 import time
+import copy
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
@@ -99,38 +100,40 @@ class Mph(Mpc):
     def sync(self):
         """TODO doc string"""
 
+        # always pop payments, they are processed successful or not
         payments = self.payments_queued
         self.payments_queued = []
 
         # transfer payment funds (create commit/revokes)
         sync_fee = self.channel_terms["sync_fee"]
         quantity = sum([p["amount"] for p in payments]) + sync_fee
-        result = self.full_duplex_transfer(
-            self.api.auth_wif, self.secrets.get, self.c2h_state,
-            self.h2c_state, quantity, self.c2h_next_revoke_secret_hash,
+        t_result = self.full_duplex_transfer(
+            self.api.auth_wif, self.secrets.get,
+            copy.deepcopy(self.c2h_state),
+            copy.deepcopy(self.h2c_state),
+            quantity, self.c2h_next_revoke_secret_hash,
             self.c2h_commit_delay_time
         )
-        commit = result["commit"]
-        revokes = result["revokes"]
-        self.h2c_state = result["recv_state"]
-        self.c2h_state = result["send_state"]
+        commit = t_result["commit"]
+        revokes = t_result["revokes"]
 
         # create next revoke secret for h2c channel
         h2c_next_revoke_secret_hash = self._gen_secret()
-        self._add_to_commits_requested(h2c_next_revoke_secret_hash)
 
         # sync with hub
-        result = self.api.mph_sync(
+        s_result = self.api.mph_sync(
             next_revoke_secret_hash=h2c_next_revoke_secret_hash,
             handle=self.handle, sends=payments, commit=commit, revokes=revokes
         )
-        h2c_commit = result["commit"]
-        c2h_revokes = result["revokes"]
-        receive_payments = result["receive"]
-        self.c2h_next_revoke_secret_hash = result["next_revoke_secret_hash"]
+        h2c_commit = s_result["commit"]
+        c2h_revokes = s_result["revokes"]
+        receive_payments = s_result["receive"]
+        self.c2h_next_revoke_secret_hash = s_result["next_revoke_secret_hash"]
         self._update_payments(payments, receive_payments)
 
-        # add commit to h2c channel
+        # update h2c channel
+        self.h2c_state = t_result["recv_state"]
+        self._add_to_commits_requested(h2c_next_revoke_secret_hash)
         if h2c_commit:
             self.h2c_state = self.api.mpc_add_commit(
                 state=self.h2c_state,
@@ -138,7 +141,8 @@ class Mph(Mpc):
                 commit_script=h2c_commit["script"]
             )
 
-        # add c2h revokes to channel
+        # update c2h channel
+        self.c2h_state = t_result["send_state"]
         if c2h_revokes:
             self.c2h_state = self.api.mpc_revoke_all(
                 state=self.c2h_state, secrets=c2h_revokes
