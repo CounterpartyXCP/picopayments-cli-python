@@ -36,7 +36,7 @@ Usage
 
 .. code:: bash
 
-    $ picopayments-cli [config argumants] <command> [command arguments]
+    $ picopayments-cli [config arguments] <command> [command arguments]
 
 
 Usage examples
