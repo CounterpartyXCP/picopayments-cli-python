@@ -333,12 +333,11 @@ counterparty XCP asset.
     # install the picopayments cli client (sorry no gui wallet just yet)
     $ pip3 install picopayments-cli
     
-    # show version and setup config files and wallet
-    $ picopayments-cli --testnet status
-
     # show hub configuration
     $ cat ~/.picopayments/testnet.cfg
-    # change the hub_verify_ssl_cert setting to false, havnt setup cert yet :/
+    # Patch the hub_verify_ssl_cert setting to false, havnt setup cert yet :/
+    $ sed -i 's/"hub_verify_ssl_cert": *true/"hub_verify_ssl_cert": false/'  ~/.picopayments/testnet.cfg
+
 
     # Show status of current connections and wallet
     $ picopayments-cli --testnet status
