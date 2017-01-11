@@ -60,6 +60,18 @@ def parse(args):
         help="Optionally provide address to check, uses wallet by default"
     )
 
+    # search raw transactions
+    command_parser = subparsers.add_parser(
+        "searchrawtxs", help="Search raw transactions."
+    )
+    command_parser.add_argument(
+        'address', metavar="ADDRESS", help="Address to get transactions for."
+    )
+    command_parser.add_argument(
+        '--unconfirmed', type=bool, default=True, metavar="BOOL",
+        help="Show unconfirmed transactions in result."
+    )
+
     # blockchain send
     command_parser = subparsers.add_parser(
         "blocksend", help="Send funds via blockchain transaction."

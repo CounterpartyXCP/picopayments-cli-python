@@ -102,6 +102,14 @@ def balances(asset=None, address=None):
 
 
 @dispatcher.add_method
+def searchrawtxs(address, unconfirmed=True):
+    hub_api = _hub_api()
+    return hub_api.search_raw_transactions(
+        address=address, unconfirmed=unconfirmed
+    )
+
+
+@dispatcher.add_method
 def blocksend(asset, destination, quantity, extra_btc=0):
     """ Send funds using via blockchain transaction.
 
@@ -285,7 +293,7 @@ def sync(handle=None):
         # update closed connections
         elif status["status"] == "closed":
             result[_handle] = {
-                "txids": client.update(),
+                "txids": client.update(),  # FIXME use map showing tx type
                 "received_payments": []
             }
 
