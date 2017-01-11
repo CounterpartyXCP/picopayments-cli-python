@@ -12,7 +12,7 @@ def parse(args):
     # pre parse testnet to modify defaults depending on network
     testnet = "--testnet" in args
 
-    description = "Decentral micropayment hub for counterparty assets."
+    description = "Decentralized micropayment hub for Counterparty assets."
     parser = argparse.ArgumentParser(description=description)
 
     # ===== CONFIG ARGS =====
