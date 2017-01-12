@@ -12,7 +12,7 @@ def parse(args):
     # pre parse testnet to modify defaults depending on network
     testnet = "--testnet" in args
 
-    description = "Decentralized micropayment hub for Counterparty assets."
+    description = "Decentral micropayment hub for counterparty assets."
     parser = argparse.ArgumentParser(description=description)
 
     # ===== CONFIG ARGS =====
@@ -65,11 +65,24 @@ def parse(args):
         "searchrawtxs", help="Search raw transactions."
     )
     command_parser.add_argument(
-        'address', metavar="ADDRESS", help="Address to get transactions for."
+        'address', metavar="ADDRESS",
+        help="Address for which to get transactions."
     )
     command_parser.add_argument(
         '--unconfirmed', type=bool, default=True, metavar="BOOL",
         help="Show unconfirmed transactions in result."
+    )
+
+    # search raw transactions
+    command_parser = subparsers.add_parser(
+        "listutxos", help="List utxos for given address."
+    )
+    command_parser.add_argument(
+        'address', metavar="ADDRESS", help="Address for which to get utxos."
+    )
+    command_parser.add_argument(
+        '--unconfirmed', type=bool, default=False, metavar="BOOL",
+        help="Show unconfirmed utxos in result."
     )
 
     # blockchain send

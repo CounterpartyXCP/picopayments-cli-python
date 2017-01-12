@@ -110,6 +110,14 @@ def searchrawtxs(address, unconfirmed=True):
 
 
 @dispatcher.add_method
+def listutxos(address, unconfirmed=False):
+    hub_api = _hub_api()
+    return hub_api.get_unspent_txouts(
+        address=address, unconfirmed=unconfirmed
+    )
+
+
+@dispatcher.add_method
 def blocksend(asset, destination, quantity, extra_btc=0):
     """ Send funds using via blockchain transaction.
 
