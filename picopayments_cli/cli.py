@@ -73,7 +73,7 @@ def parse(args):
         help="Show unconfirmed transactions in result."
     )
 
-    # search raw transactions
+    # list utxos for address
     command_parser = subparsers.add_parser(
         "listutxos", help="List utxos for given address."
     )
@@ -97,7 +97,7 @@ def parse(args):
         help="Address to receive the funds"
     )
     command_parser.add_argument(
-        'quantity', type=int, metavar="QUANTITY",
+        'quantity', type=int, metavar="SATOSHIS",
         help="Quantity of the given asset to transfer."
     )
     command_parser.add_argument(
@@ -114,7 +114,7 @@ def parse(args):
         help="Asset to exchange in connection."
     )
     command_parser.add_argument(
-        'quantity', type=int, metavar="QUANTITY",
+        'quantity', type=int, metavar="SATOSHIS",
         help="Quantity to be bound in the connection deposit."
     )
     command_parser.add_argument(
@@ -139,7 +139,7 @@ def parse(args):
         help="Handle of connection to receive funds."
     )
     command_parser.add_argument(
-        'quantity', type=int, metavar="QUANTITY",
+        'quantity', type=int, metavar="SATOSHIS",
         help="Quantity of channel asset to transfer."
     )
     command_parser.add_argument(
