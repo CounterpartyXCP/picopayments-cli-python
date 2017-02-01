@@ -13,6 +13,7 @@ netcode = None
 basedir = None
 config_path = None
 wallet_path = None
+history_path = None
 data_path = None
 
 
@@ -30,6 +31,7 @@ def load(basedir, testnet):
 
     # update path and network settings
     wallet_file = "testnet.wif" if testnet else "mainnet.wif"
+    history_file = "testnet.history.csv" if testnet else "mainnet.history.csv"
     config_file = "testnet.cfg" if testnet else "mainnet.cfg"
     data_file = "testnet.data" if testnet else "mainnet.data"
     globals().update({
@@ -37,6 +39,7 @@ def load(basedir, testnet):
         "testnet": testnet,
         "netcode": "XTN" if testnet else "BTC",
         "wallet_path": os.path.join(basedir, wallet_file),
+        "history_path": os.path.join(basedir, history_file),
         "config_path": os.path.join(basedir, config_file),
         "data_path": os.path.join(basedir, data_file)
     })

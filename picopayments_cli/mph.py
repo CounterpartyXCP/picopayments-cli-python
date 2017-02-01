@@ -9,7 +9,7 @@ import copy
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
-from .mpc import Mpc
+from .mpc import Mpc, history_add_entry
 
 
 class Mph(Mpc):
@@ -53,6 +53,43 @@ class Mph(Mpc):
             data[attr] = getattr(self, attr)
         return data
 
+    def _history_add_published_c2h_deposit(self, rawtx):
+        self._history_add_rawtx(rawtx, "publish_c2h_deposit_tx")
+
+    def _history_add_published_h2c_commit(self, rawtx):
+        self._history_add_rawtx(rawtx, "publish_h2c_commit_tx",
+                                wallet_tx=False)
+
+    def _history_add_update_rawtxs(self, rawtxs):
+        for rawtx in rawtxs["payout"]:
+            self._history_add_rawtx(rawtx, "publish_h2c_payout_tx")
+        for rawtx in rawtxs["revoke"]:
+            self._history_add_rawtx(rawtx, "publish_c2h_revoke_tx")
+        for rawtx in rawtxs["change"]:
+            self._history_add_rawtx(rawtx, "publish_c2h_change_tx")
+        for rawtx in rawtxs["expire"]:
+            self._history_add_rawtx(rawtx, "publish_c2h_expire_tx")
+        # ignore commit as they are already added in close method
+
+    def _history_add_rawtx(self, rawtx, action, wallet_tx=True):
+        address = None
+        if wallet_tx:  # FIXME deduce from input/output addresses
+            address = keys.address_from_wif(self.api.auth_wif)
+        asset_quantity, btc_quantity = self.get_transferred(
+            rawtx, asset=self.asset, address=address
+        )
+        history_add_entry(
+            handle=self.handle,
+            action=action,
+            id=util.gettxid(rawtx),
+            fee="{quantity}{asset}".format(
+                quantity=abs(btc_quantity), asset="BTC"
+            ),
+            quantity='{quantity}{asset}'.format(
+                quantity=abs(asset_quantity), asset=self.asset
+            )
+        )
+
     def connect(self, quantity, expire_time=1024, asset="XCP",
                 delay_time=2, own_url=None):
         """TODO doc string"""
@@ -66,10 +103,12 @@ class Mph(Mpc):
         next_revoke_hash = self._create_initial_secrets()
         self._request_connection()
         self._validate_matches_terms()
-        c2h_deposit_rawtx = self._make_deposit()
+        unsigned_c2h_deposit_rawtx = self._make_deposit()
         h2c_deposit_script = self._exchange_deposit_scripts(next_revoke_hash)
-        signed_rawtx = self.sign(c2h_deposit_rawtx, self.api.auth_wif)
-        c2h_deposit_txid = self.publish(signed_rawtx)
+        signed_c2h_deposit_rawtx = self.sign(unsigned_c2h_deposit_rawtx,
+                                             self.api.auth_wif)
+        c2h_deposit_txid = self.publish(signed_c2h_deposit_rawtx)
+        self._history_add_published_c2h_deposit(signed_c2h_deposit_rawtx)
         self._set_initial_h2c_state(h2c_deposit_script)
         self._add_to_commits_requested(next_revoke_hash)
         self.payments_sent = []
@@ -77,6 +116,29 @@ class Mph(Mpc):
         self.payments_queued = []
         self.c2h_commit_delay_time = delay_time
         return c2h_deposit_txid
+
+    def _history_add_micro_send(self, destination, quantity, token):
+        history_add_entry(
+            handle=self.handle,
+            action="queue_micropayment",
+            id=token,
+            fee="{quantity}{asset}".format(quantity=0, asset=self.asset),
+            quantity='{quantity}{asset}'.format(
+                quantity=quantity, asset=self.asset
+            ),
+            destination=destination
+        )
+
+    def _history_add_hub_sync(self, id, fee, quantity):
+        history_add_entry(
+            handle=self.handle,
+            action="hub_sync",
+            id=id,
+            fee="{quantity}{asset}".format(quantity=fee, asset=self.asset),
+            quantity='{quantity}{asset}'.format(
+                quantity=quantity, asset=self.asset
+            )
+        )
 
     def micro_send(self, handle, quantity, token=None):
         """TODO doc string"""
@@ -88,6 +150,7 @@ class Mph(Mpc):
             "amount": quantity,
             "token": token
         })
+        self._history_add_micro_send(handle, quantity, token)
         return token
 
     def get_status(self, clearance=6):
@@ -108,10 +171,12 @@ class Mph(Mpc):
         sync_fee = self.channel_terms["sync_fee"]
         quantity = sum([p["amount"] for p in payments]) + sync_fee
         t_result = self.full_duplex_transfer(
-            self.api.auth_wif, self.secrets.get,
+            self.api.auth_wif,
+            self.secrets.get,
             copy.deepcopy(self.c2h_state),
             copy.deepcopy(self.h2c_state),
-            quantity, self.c2h_next_revoke_secret_hash,
+            quantity,
+            self.c2h_next_revoke_secret_hash,
             self.c2h_commit_delay_time
         )
         commit = t_result["commit"]
@@ -123,7 +188,13 @@ class Mph(Mpc):
         # sync with hub
         s_result = self.api.mph_sync(
             next_revoke_secret_hash=h2c_next_revoke_secret_hash,
-            handle=self.handle, sends=payments, commit=commit, revokes=revokes
+            handle=self.handle,
+            sends=payments,
+            commit=commit,
+            revokes=revokes
+        )
+        self._history_add_hub_sync(
+            self.c2h_next_revoke_secret_hash, sync_fee, quantity
         )
         h2c_commit = s_result["commit"]
         c2h_revokes = s_result["revokes"]
@@ -167,7 +238,11 @@ class Mph(Mpc):
             })
 
     def close(self):
-        commit_txid = self.finalize_commit(self._get_wif, self.h2c_state)
+
+        # publish h2c commit if possible
+        commit_rawtx = self.finalize_commit(self._get_wif, self.h2c_state)
+        if commit_rawtx is not None:
+            self._history_add_published_h2c_commit(commit_rawtx)
 
         # get h2c spend secret if no commits for channel
         h2c_spend_secret = None
@@ -186,7 +261,7 @@ class Mph(Mpc):
             secret_hash = util.hash160hex(c2h_spend_secret)
             self.secrets[secret_hash] = c2h_spend_secret
 
-        return commit_txid
+        return commit_rawtx
 
     def is_closed(self, clearance=6):
         c2h = self.c2h_state
@@ -199,21 +274,23 @@ class Mph(Mpc):
         )
 
     def update(self, clearance=6):
-        txids = []
 
         # close channel if needed
+        commit_rawtx = None
         h2c_closed = self.api.mpc_published_commits(state=self.h2c_state)
         if self.is_closed(clearance=clearance) and not h2c_closed:
-            txid = self.close()
-            if txid:
-                txids.append(txid)
+            commit_rawtx = self.close()
 
         # recover funds if possible
-        txids += self.full_duplex_recover_funds(
+        rawtxs = self.full_duplex_recover_funds(
             self._get_wif, self.secrets.get, self.h2c_state, self.c2h_state
         )
 
-        return txids
+        if commit_rawtx is not None:
+            rawtxs["commit"].append(commit_rawtx)
+
+        self._history_add_update_rawtxs(rawtxs)
+        return rawtxs
 
     def _get_wif(self, pubkey):
         return self.api.auth_wif

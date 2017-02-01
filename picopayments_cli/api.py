@@ -1,15 +1,16 @@
 import os
 import copy
 import json
+import csv
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from picopayments_cli.rpc import JsonRpc
-from picopayments_cli.mpc import Mpc
 from picopayments_cli.mph import Mph
 from picopayments_cli import etc
 from picopayments_cli import __version__
 from micropayment_core import keys
+from picopayments_cli.mpc import Mpc
 
 
 @dispatcher.add_method
@@ -331,6 +332,19 @@ def close(handle):
     data["connections"][handle] = client.serialize()
     _save_data(data)
     return commit_txid
+
+
+@dispatcher.add_method
+def history(handle=None):
+    """ Show history
+
+    Args:
+        handle (str): Limit history to given channel.
+    """
+    if os.path.exists(etc.history_path):
+        with open(etc.history_path, 'r') as csvfile:
+            return list(csv.DictReader(csvfile))
+    return []
 
 
 @Request.application

@@ -338,7 +338,6 @@ counterparty XCP asset.
     # Patch the hub_verify_ssl_cert setting to false, havnt setup cert yet :/
     $ sed -i 's/"hub_verify_ssl_cert": *true/"hub_verify_ssl_cert": false/'  ~/.picopayments/testnet.cfg
 
-
     # Show status of current connections and wallet
     $ picopayments-cli --testnet status
     # post the wallet address in https://community.storj.io/channel/micropayments-testing and you will be sent some funds for testing

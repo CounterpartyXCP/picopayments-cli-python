@@ -3,15 +3,84 @@
 # License: MIT (see LICENSE file)
 
 
+import os
+import csv
+import time
 from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
+from picopayments_cli import etc
+
+
+HISTORY_FIELDNAMES = [
+    'timestamp',
+    'handle',
+    'action',
+    'id',  # txid, token, revoke secret?
+    'fee',
+    'quantity',
+    'destination'
+]
+
+
+def history_add_entry(**kwargs):
+    if etc.history_path is not None:
+
+        # add missing fields
+        kwargs["timestamp"] = "{0}".format(time.time())
+        for fieldname in HISTORY_FIELDNAMES:
+            if fieldname not in kwargs:
+                kwargs[fieldname] = ""
+
+        # update history file
+        writeheader = not os.path.exists(etc.history_path)
+        with open(etc.history_path, 'a') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=HISTORY_FIELDNAMES)
+            if writeheader:
+                writer.writeheader()
+            writer.writerow(kwargs)
 
 
 class Mpc(object):
 
     def __init__(self, api):
         self.api = api  # picopayments_cli.rpc.API instance
+
+    def _btc_transferred(self, rawtx, address):
+
+        netcode = keys.netcode_from_address(address)
+        tx = util.load_tx(self.get_rawtx, rawtx)
+
+        total = 0
+        for tx_out in tx.txs_out:
+            if tx_out.bitcoin_address(netcode=netcode) == address:
+                total += tx_out.coin_value
+        if not tx.is_coinbase():
+            for tx_out in tx.unspents:
+                if tx_out.bitcoin_address(netcode=netcode) == address:
+                    total -= tx_out.coin_value
+        return total
+
+    def get_transferred(self, rawtx, asset=None, address=None):
+        quantity = 0
+        try:
+            src, dest, btc, fee, data = self.api.get_tx_info(tx_hex=rawtx)
+            if data:
+                message_type_id, unpacked = self.api.unpack(data_hex=data)
+                if message_type_id == 0:
+                    assert(asset is None or asset == unpacked["asset"])
+                    assert(address is None or address == src or address == dest)
+
+                    # by default return payee view
+                    if address is None or dest == address:
+                        return unpacked["quantity"], btc
+
+                    quantity = -unpacked["quantity"]
+        except Exception:  # FIXME catch specific expected exceptions
+            pass  # not a counterparty tx
+
+        # must count tx outputs - inputs for payer view
+        return quantity, self._btc_transferred(rawtx, address)
 
     def get_rawtx(self, txid):
         """TODO doc string"""
@@ -107,7 +176,8 @@ class Mpc(object):
 
             # get hashes of secrets to publish
             revoke_hashes = self.api.mpc_revoke_hashes_until(
-                state=recv_state, quantity=revoke_until_quantity,
+                state=recv_state,
+                quantity=revoke_until_quantity,
                 surpass=False  # never revoke past the given quantity!!!
             )
 
@@ -127,7 +197,9 @@ class Mpc(object):
         send_moved_before = self.api.mpc_transferred_amount(state=send_state)
         if send_quantity > 0:
             result = self.create_signed_commit(
-                wif, send_state, send_moved_before + send_quantity,
+                wif,
+                send_state,
+                send_moved_before + send_quantity,
                 send_next_revoke_secret_hash,
                 send_commit_delay_time
             )
@@ -148,7 +220,9 @@ class Mpc(object):
         signed_rawtx = scripts.sign_payout_recover(
             self.get_rawtx, wif, payout_rawtx, commit_script, spend_secret
         )
-        return self.publish(signed_rawtx)
+        if self.publish(signed_rawtx):
+            return signed_rawtx
+        return None
 
     def recover_revoked(self, get_wif_func, revoke_rawtx, commit_script,
                         revoke_secret):
@@ -157,7 +231,9 @@ class Mpc(object):
         signed_rawtx = scripts.sign_revoke_recover(
             self.get_rawtx, wif, revoke_rawtx, commit_script, revoke_secret
         )
-        return self.publish(signed_rawtx)
+        if self.publish(signed_rawtx):
+            return signed_rawtx
+        return None
 
     def recover_change(self, get_wif_func, change_rawtx, deposit_script,
                        spend_secret):
@@ -166,7 +242,9 @@ class Mpc(object):
         signed_rawtx = scripts.sign_change_recover(
             self.get_rawtx, wif, change_rawtx, deposit_script, spend_secret
         )
-        return self.publish(signed_rawtx)
+        if self.publish(signed_rawtx):
+            return signed_rawtx
+        return None
 
     def recover_expired(self, get_wif_func, expire_rawtx, deposit_script):
         pubkey = scripts.get_deposit_payer_pubkey(deposit_script)
@@ -174,7 +252,9 @@ class Mpc(object):
         signed_rawtx = scripts.sign_expire_recover(
             self.get_rawtx, wif, expire_rawtx, deposit_script
         )
-        return self.publish(signed_rawtx)
+        if self.publish(signed_rawtx):
+            return signed_rawtx
+        return None
 
     def finalize_commit(self, get_wif_func, state):
         commit = self.api.mpc_highest_commit(state=state)
@@ -186,7 +266,9 @@ class Mpc(object):
         signed_rawtx = scripts.sign_finalize_commit(
             self.get_rawtx, wif, commit["rawtx"], deposit_script
         )
-        return self.publish(signed_rawtx)
+        if self.publish(signed_rawtx):
+            return signed_rawtx
+        return None
 
     def full_duplex_recover_funds(self, get_wif_func, get_secret_func,
                                   recv_state, send_state):
@@ -197,11 +279,17 @@ class Mpc(object):
         )
         send_spend_secret = get_secret_func(send_spend_secret_hash)
 
-        txids = []
+        rawtxs = {
+            "payout": [],
+            "revoke": [],
+            "change": [],
+            "expire": [],
+            "commit": []
+        }
 
         # get payouts
         for payout_tx in self.api.mpc_payouts(state=recv_state):
-            txids.append(self.recover_payout(
+            rawtxs["payout"].append(self.recover_payout(
                 get_wif_func=get_wif_func,
                 get_secret_func=get_secret_func,
                 **payout_tx
@@ -210,18 +298,18 @@ class Mpc(object):
         rtxs = self.api.mpc_recoverables(state=send_state,
                                          spend_secret=send_spend_secret)
         for revoke_tx in rtxs["revoke"]:
-            txids.append(self.recover_revoked(
+            rawtxs["revoke"].append(self.recover_revoked(
                 get_wif_func=get_wif_func, **revoke_tx
             ))
         for change_tx in rtxs["change"]:
-            txids.append(self.recover_change(
+            rawtxs["change"].append(self.recover_change(
                 get_wif_func=get_wif_func, **change_tx
             ))
         for expire_tx in rtxs["expire"]:
-            txids.append(self.recover_expired(
+            rawtxs["expire"].append(self.recover_expired(
                 get_wif_func=get_wif_func, **expire_tx
             ))
-        return txids
+        return rawtxs
 
     def full_duplex_channel_status(self, handle, netcode, send_state,
                                    recv_state, get_secret_func, clearance=6):
@@ -259,6 +347,7 @@ class Mpc(object):
             )
 
         send_balance = send_deposit + recv_transferred - send_transferred
+        recv_balance = recv_deposit + send_transferred - recv_transferred
 
         ttl = None
         if send_ttl is not None and recv_ttl is not None:
@@ -274,6 +363,8 @@ class Mpc(object):
         expired = ttl == 0  # None explicitly ignore as channel opening
         if expired or send_secret or commits_published:
             status = "closed"
+            send_balance = send_deposit
+            recv_balance = 0
 
         return {
             # FIXME get channel tx history
@@ -288,7 +379,7 @@ class Mpc(object):
             "send_deposit_balances": send_balances,
             "send_deposit_expire_time": send_deposit_expire_time,
             "send_transferred_quantity": send_transferred,
-            "recv_balance": recv_deposit + send_transferred - recv_transferred,
+            "recv_balance": recv_balance,
             "recv_deposit_address": recv_deposit_address,
             "recv_deposit_ttl": recv_ttl,
             "recv_deposit_balances": recv_balances,

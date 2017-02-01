@@ -178,6 +178,15 @@ def parse(args):
         help="Handle of connection to close."
     )
 
+    # show history
+    command_parser = subparsers.add_parser(
+        "history", help="Show history"
+    )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Limit history to given channel."
+    )
+
     # start rpc api server
     command_parser = subparsers.add_parser(
         "serve", help="Start RPC-API server."
