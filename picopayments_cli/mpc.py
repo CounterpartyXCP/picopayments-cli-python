@@ -69,7 +69,8 @@ class Mpc(object):
                 message_type_id, unpacked = self.api.unpack(data_hex=data)
                 if message_type_id == 0:
                     assert(asset is None or asset == unpacked["asset"])
-                    assert(address is None or address == src or address == dest)
+                    assert(address is None or address ==
+                           src or address == dest)
 
                     # by default return payee view
                     if address is None or dest == address:
@@ -256,6 +257,28 @@ class Mpc(object):
             return signed_rawtx
         return None
 
+    def _can_publish(self, rawtx, deposit_utxos):
+
+        # check utxos not spent
+        tx = util.load_tx(self.get_rawtx, rawtx)
+        for tx_in in tx.txs_in:
+            if tx_in.is_coinbase():
+                continue
+
+            found = False
+            for utxo in deposit_utxos:
+                txid = util.b2h_rev(tx_in.previous_hash)
+                vout = tx_in.previous_index
+                if (utxo["txid"] == txid and utxo["vout"] == vout):
+                    found = True
+                    break
+            if not found:
+                return False
+
+        # FIXME check signature
+
+        return True
+
     def finalize_commit(self, get_wif_func, state):
         commit = self.api.mpc_highest_commit(state=state)
         if commit is None:
@@ -263,11 +286,17 @@ class Mpc(object):
         deposit_script = state["deposit_script"]
         pubkey = scripts.get_deposit_payee_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
-        signed_rawtx = scripts.sign_finalize_commit(
+        rawtx = scripts.sign_finalize_commit(
             self.get_rawtx, wif, commit["rawtx"], deposit_script
         )
-        if self.publish(signed_rawtx):
-            return signed_rawtx
+
+        netcode = keys.netcode_from_wif(wif)
+        deposit_address = util.script_address(deposit_script, netcode)
+        deposit_utxos = self.api.get_unspent_txouts(address=deposit_address,
+                                                    unconfirmed=False)
+
+        if self._can_publish(rawtx, deposit_utxos) and self.publish(rawtx):
+            return rawtx
         return None
 
     def full_duplex_recover_funds(self, get_wif_func, get_secret_func,
