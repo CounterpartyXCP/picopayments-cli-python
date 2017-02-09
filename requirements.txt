@@ -2,5 +2,5 @@ pycoin == 0.70
 ecdsa == 0.13
 pyelliptic == 1.5.7
 json-rpc == 1.10.3
-micropayment-core == 0.4.4
+micropayment-core == 0.4.5
 Werkzeug == 0.11.11
