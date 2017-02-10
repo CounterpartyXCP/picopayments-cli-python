@@ -187,6 +187,15 @@ def parse(args):
         help="Limit history to given channel."
     )
 
+    # cull closed connections no longer needed
+    command_parser = subparsers.add_parser(
+        "cull", help="Removes closed channels if all funds have been recovered."
+    )
+    command_parser.add_argument(
+        '--handle', default=None, metavar="HANDLE",
+        help="Optional handle of specific connection to be cull."
+    )
+
     # start rpc api server
     command_parser = subparsers.add_parser(
         "serve", help="Start RPC-API server."

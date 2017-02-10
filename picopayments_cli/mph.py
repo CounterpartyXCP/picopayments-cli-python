@@ -292,7 +292,21 @@ class Mph(Mpc):
         self._history_add_update_rawtxs(rawtxs)
         return rawtxs
 
+    def can_cull(self):
+        netcode = keys.netcode_from_wif(self.api.auth_wif)
+        scripts = [self.c2h_state["deposit_script"]]
+        scripts += [c["script"] for c in self.c2h_state["commits_active"]]
+        scripts += [c["script"] for c in self.c2h_state["commits_revoked"]]
+        scripts += [c["script"] for c in self.h2c_state["commits_active"]]
+        scripts += [c["script"] for c in self.h2c_state["commits_revoked"]]
+        for script in scripts:
+            address = util.script_address(script, netcode)
+            if self.address_in_use(address):
+                return False
+        return True
+
     def _get_wif(self, pubkey):
+        # FIXME assert pubkey matches auth wif
         return self.api.auth_wif
 
     def _add_to_commits_requested(self, secret_hash):

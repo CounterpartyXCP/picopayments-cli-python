@@ -272,7 +272,7 @@ def sync(handle=None):
     Returns:
         {
           "connection handle": {
-            "txids": ["of transactions publish while recovering funds"],
+            "rawtxs": ["of transactions publish while recovering funds"],
             "received_payments": [
               {
                 "payer_handle": "sender handle",
@@ -290,23 +290,23 @@ def sync(handle=None):
         if handle is not None and _handle != handle:
             continue
         client = Mph.deserialize(hub_api, connection_data)
+        if client.can_cull():
+            continue  # dont sync closed inactive
         status = client.get_status()
 
         # sync open connections
         if status["status"] == "open":
             result[_handle] = {
-                "txids": [],
+                "rawtxs": [],
                 "received_payments": client.sync()
             }
 
         # update closed connections
         elif status["status"] == "closed":
             result[_handle] = {
-                "txids": client.update(),  # FIXME use map showing tx type
+                "rawtxs": client.update(),
                 "received_payments": []
             }
-
-            # FIXME remove connection if all funds recovered
 
         data["connections"][client.handle] = client.serialize()
 
@@ -341,10 +341,35 @@ def history(handle=None):
     Args:
         handle (str): Limit history to given channel.
     """
+    # FIXME limit to handle if given
     if os.path.exists(etc.history_path):
         with open(etc.history_path, 'r') as csvfile:
             return list(csv.DictReader(csvfile))
     return []
+
+
+@dispatcher.add_method
+def cull(handle=None):
+    """ Removes closed channels if all funds have been recovered.
+
+    Args:
+        handle (str): Optional handle of specific connection to be cull.
+
+    Returns:
+        List of with handles of culled connections.
+    """
+    data = _load_data()
+    hub_api = _hub_api()
+    culled = []
+    for _handle, connection_data in copy.deepcopy(data)["connections"].items():
+        if handle is not None and _handle != handle:
+            continue
+        client = Mph.deserialize(hub_api, connection_data)
+        if client.can_cull():
+            culled.append(_handle)
+            del data["connections"][_handle]
+    _save_data(data)
+    return culled
 
 
 @Request.application

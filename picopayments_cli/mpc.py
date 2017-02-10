@@ -87,6 +87,15 @@ class Mpc(object):
         """TODO doc string"""
         return self.api.getrawtransaction(tx_hash=txid)
 
+    def address_in_use(self, address):
+        for asset, quantity in self.get_balances(address).items():
+            if quantity != 0:
+                return True
+        if self.api.get_unspent_txouts(address=address, unconfirmed=True):
+            return True
+        return False
+
+
     def get_balances(self, address, assets=None):
         """Get confirmed balances for given assets."""
 
@@ -388,9 +397,11 @@ class Mpc(object):
             status = "open"
         send_secret_hash = scripts.get_deposit_spend_secret_hash(send_script)
         send_secret = get_secret_func(send_secret_hash)
-        commits_published = self.api.mpc_published_commits(state=send_state)
+        send_commits_published = self.api.mpc_published_commits(
+            state=send_state
+        )
         expired = ttl == 0  # None explicitly ignore as channel opening
-        if expired or send_secret or commits_published:
+        if expired or send_secret or send_commits_published:
             status = "closed"
             send_balance = send_deposit
             recv_balance = 0
@@ -407,6 +418,7 @@ class Mpc(object):
             "send_deposit_ttl": send_ttl,
             "send_deposit_balances": send_balances,
             "send_deposit_expire_time": send_deposit_expire_time,
+            "send_commits_published": send_commits_published,
             "send_transferred_quantity": send_transferred,
             "recv_balance": recv_balance,
             "recv_deposit_address": recv_deposit_address,
