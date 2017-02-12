@@ -95,7 +95,6 @@ class Mpc(object):
             return True
         return False
 
-
     def get_balances(self, address, assets=None):
         """Get confirmed balances for given assets."""
 
@@ -318,35 +317,42 @@ class Mpc(object):
         send_spend_secret = get_secret_func(send_spend_secret_hash)
 
         rawtxs = {
-            "payout": [],
-            "revoke": [],
-            "change": [],
-            "expire": [],
-            "commit": []
+            "payout": {},  # {"txid": "rawtx"}
+            "revoke": {},  # {"txid": "rawtx"}
+            "change": {},  # {"txid": "rawtx"}
+            "expire": {},  # {"txid": "rawtx"}
+            "commit": {}   # {"txid": "rawtx"}
         }
 
         # get payouts
         for payout_tx in self.api.mpc_payouts(state=recv_state):
-            rawtxs["payout"].append(self.recover_payout(
+            rawtx = self.recover_payout(
                 get_wif_func=get_wif_func,
                 get_secret_func=get_secret_func,
                 **payout_tx
-            ))
+            )
+            rawtxs["payout"][util.gettxid(rawtx)] = rawtx
 
         rtxs = self.api.mpc_recoverables(state=send_state,
                                          spend_secret=send_spend_secret)
         for revoke_tx in rtxs["revoke"]:
-            rawtxs["revoke"].append(self.recover_revoked(
+            rawtx = self.recover_revoked(
                 get_wif_func=get_wif_func, **revoke_tx
-            ))
+            )
+            rawtxs["revoke"][util.gettxid(rawtx)] = rawtx
+
         for change_tx in rtxs["change"]:
-            rawtxs["change"].append(self.recover_change(
+            rawtx = self.recover_change(
                 get_wif_func=get_wif_func, **change_tx
-            ))
+            )
+            rawtxs["change"][util.gettxid(rawtx)] = rawtx
+
         for expire_tx in rtxs["expire"]:
-            rawtxs["expire"].append(self.recover_expired(
+            rawtx = self.recover_expired(
                 get_wif_func=get_wif_func, **expire_tx
-            ))
+            )
+            rawtxs["expire"][util.gettxid(rawtx)] = rawtx
+
         return rawtxs
 
     def full_duplex_channel_status(self, handle, netcode, send_state,

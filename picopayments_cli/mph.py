@@ -61,13 +61,13 @@ class Mph(Mpc):
                                 wallet_tx=False)
 
     def _history_add_update_rawtxs(self, rawtxs):
-        for rawtx in rawtxs["payout"]:
+        for txid, rawtx in rawtxs["payout"].items():
             self._history_add_rawtx(rawtx, "publish_h2c_payout_tx")
-        for rawtx in rawtxs["revoke"]:
+        for txid, rawtx in rawtxs["revoke"].items():
             self._history_add_rawtx(rawtx, "publish_c2h_revoke_tx")
-        for rawtx in rawtxs["change"]:
+        for txid, rawtx in rawtxs["change"].items():
             self._history_add_rawtx(rawtx, "publish_c2h_change_tx")
-        for rawtx in rawtxs["expire"]:
+        for txid, rawtx in rawtxs["expire"].items():
             self._history_add_rawtx(rawtx, "publish_c2h_expire_tx")
         # ignore commit as they are already added in close method
 
@@ -287,7 +287,7 @@ class Mph(Mpc):
         )
 
         if commit_rawtx is not None:
-            rawtxs["commit"].append(commit_rawtx)
+            rawtxs["commit"][util.gettxid(commit_rawtx)] = commit_rawtx
 
         self._history_add_update_rawtxs(rawtxs)
         return rawtxs
