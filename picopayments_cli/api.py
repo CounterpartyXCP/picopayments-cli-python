@@ -252,7 +252,8 @@ def status(handle=None, verbose=False):
                 "asset": status["asset"],
                 "balance": status["balance"],
                 "ttl": status["ttl"],
-                "status": status["status"]
+                "status": status["status"],
+                "payments_queued": connection_data["payments_queued"]
             }
     return result
 
