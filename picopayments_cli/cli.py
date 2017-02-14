@@ -78,7 +78,8 @@ def parse(args):
         "listutxos", help="List utxos for given address."
     )
     command_parser.add_argument(
-        'address', metavar="ADDRESS", help="Address for which to get utxos."
+        'address', metavar="ADDRESS",
+        help="Address for which to get utxos."
     )
     command_parser.add_argument(
         '--unconfirmed', type=bool, default=False, metavar="BOOL",
@@ -189,7 +190,8 @@ def parse(args):
 
     # cull closed connections no longer needed
     command_parser = subparsers.add_parser(
-        "cull", help="Removes closed channels if all funds have been recovered."
+        "cull",
+        help="Removes closed channels if all funds have been recovered."
     )
     command_parser.add_argument(
         '--handle', default=None, metavar="HANDLE",
