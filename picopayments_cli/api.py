@@ -341,6 +341,9 @@ def history(handle=None):
 
     Args:
         handle (str): Limit history to given channel.
+
+    Returns:
+        List of previous actions made.
     """
     # FIXME limit to handle if given
     if os.path.exists(etc.history_path):

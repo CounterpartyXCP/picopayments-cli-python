@@ -167,6 +167,123 @@ Returns
     }
 
 
+searchrawtxs
+============
+
+Get raw transactions for given address.
+
+Arguments
+---------
+
+ * address (str): Address to get raw transactions for.
+ * unconfirmed (bool, default=true): Include unconfirmed transactions.
+
+Returns
+-------
+
+A list of dicts with information about the transaction.
+
+Example
+-------
+
+.. code::
+
+    $ picopayments-cli --testnet searchrawtxs n2s5WgXPZvgKjtApHLk294gCditcDEKGJS
+    [
+        {
+            "blockhash": "0000000000000a835cdd31ad68496bd41c240471a5cdff3c07924646d441bd78",
+            "blocktime": 1487152958,
+            "confirmations": 31,
+            "hex": "010000000135a32ea67f349fcae4bd272285663eec97c37bb2b816303bc44b26992b551cd9010000006a47304402207a89d42e1e61c7abead529b09f039ba2d3c585db88ddb233f9bb360cccd5c07002204ae361cc83610beb406b690bc62fad5af13d79919e724f039675f555c01b2b670121035f57228dc3b9a3224f2d48a1e2f9886f8412a0e77afdec28fd94dab7c7513b56ffffffff0340420f00000000001976a914ea28fc5a328d7f43c4a88e7a2edf1e1d8a8d60ae88ac00000000000000001e6a1c594663b76ecc1e31edd16d3b1ec19b0f4f983a71a70bed9465caa1cd8afc7100000000001976a914e63fe6f12b3300f2fad00a1270b71529985d972d88ac00000000",
+            "locktime": 0,
+            "size": 264,
+            "time": 1487152958,
+            "txid": "caf1f644777ed7b2b3eb6b5870368efe678eef738ba9c269560ad4414b3d1ce5",
+            "version": 1,
+            "vin": [
+                {
+                    "scriptSig": {
+                        "asm": "304402207a89d42e1e61c7abead529b09f039ba2d3c585db88ddb233f9bb360cccd5c07002204ae361cc83610beb406b690bc62fad5af13d79919e724f039675f555c01b2b67[ALL] 035f57228dc3b9a3224f2d48a1e2f9886f8412a0e77afdec28fd94dab7c7513b56",
+                        "hex": "47304402207a89d42e1e61c7abead529b09f039ba2d3c585db88ddb233f9bb360cccd5c07002204ae361cc83610beb406b690bc62fad5af13d79919e724f039675f555c01b2b670121035f57228dc3b9a3224f2d48a1e2f9886f8412a0e77afdec28fd94dab7c7513b56"
+                    },
+                    "sequence": 4294967295,
+                    "txid": "d91c552b99264bc43b3016b8b27bc397ec3e66852227bde4ca9f347fa62ea335",
+                    "vout": 1
+                }
+            ],
+            "vout": [
+                {
+                    "n": 0,
+                    "scriptPubKey": {
+                        "addresses": [
+                            "n2s5WgXPZvgKjtApHLk294gCditcDEKGJS"
+                        ],
+                        "asm": "OP_DUP OP_HASH160 ea28fc5a328d7f43c4a88e7a2edf1e1d8a8d60ae OP_EQUALVERIFY OP_CHECKSIG",
+                        "hex": "76a914ea28fc5a328d7f43c4a88e7a2edf1e1d8a8d60ae88ac",
+                        "reqSigs": 1,
+                        "type": "pubkeyhash"
+                    },
+                    "value": 0.01
+                },
+                {
+                    "n": 1,
+                    "scriptPubKey": {
+                        "asm": "OP_RETURN 594663b76ecc1e31edd16d3b1ec19b0f4f983a71a70bed9465caa1cd",
+                        "hex": "6a1c594663b76ecc1e31edd16d3b1ec19b0f4f983a71a70bed9465caa1cd",
+                        "type": "nulldata"
+                    },
+                    "value": 0.0
+                },
+                {
+                    "n": 2,
+                    "scriptPubKey": {
+                        "addresses": [
+                            "n2WQGAvnDS1vf7uXToLou6kLxJXRGFHo2b"
+                        ],
+                        "asm": "OP_DUP OP_HASH160 e63fe6f12b3300f2fad00a1270b71529985d972d OP_EQUALVERIFY OP_CHECKSIG",
+                        "hex": "76a914e63fe6f12b3300f2fad00a1270b71529985d972d88ac",
+                        "reqSigs": 1,
+                        "type": "pubkeyhash"
+                    },
+                    "value": 0.07470218
+                }
+            ]
+        }
+    ]
+
+listutxos
+=========
+
+Get utxos for given address.
+
+Arguments
+---------
+
+ * address (str): Address to get utxos for.
+ * unconfirmed (bool, default=true): Include unconfirmed outputs.
+
+Returns
+-------
+
+A list of dicts with information the unspent transaction output.
+
+Example
+-------
+
+.. code::
+
+    $ picopayments-cli --testnet listutxos n2s5WgXPZvgKjtApHLk294gCditcDEKGJS
+    [
+        {
+            "amount": 0.01,
+            "confirmations": 32,
+            "scriptPubKey": "76a914ea28fc5a328d7f43c4a88e7a2edf1e1d8a8d60ae88ac",
+            "txid": "caf1f644777ed7b2b3eb6b5870368efe678eef738ba9c269560ad4414b3d1ce5",
+            "vout": 0
+        }
+    ]
+
+
 blocksend
 =========
 
@@ -318,6 +435,50 @@ close
 Close open connection and settle to blockchain.
 
 
+history
+=======
+
+Show history
+
+Arguments
+---------
+
+ * handle (str): Limit history to given channel.
+
+Returns
+-------
+
+List of previous actions made.
+
+
+cull
+====
+
+Removes closed channels if all funds have been recovered.
+
+Arguments
+---------
+
+ * handle (str): Optional handle of specific connection to be cull.
+
+Returns
+-------
+
+List of with handles of culled connections.
+
+
+serve
+=====
+
+Start RPC-API Server.
+
+Arguments
+---------
+
+ * host (str): Network interface on which to host the service.
+ * port (int): Network port on which to host the service.
+
+
 Testing guide
 #############
 
@@ -361,9 +522,3 @@ counterparty XCP asset.
     
     # close payment channel and settle to blockchain
     $ picopayments-cli --testnet close HANDLE
-
-
-FAQ
-###
-
-TODO answered questions
