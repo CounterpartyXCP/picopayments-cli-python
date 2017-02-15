@@ -198,6 +198,15 @@ def parse(args):
         help="Optional handle of specific connection to be cull."
     )
 
+    # cancel queued payment
+    command_parser = subparsers.add_parser(
+        "cancelpayment", help="Cancel queued but unsynced payment."
+    )
+    command_parser.add_argument(
+        'token', metavar="TOKEN",
+        help="Token of the queued payment to be canceled."
+    )
+
     # start rpc api server
     command_parser = subparsers.add_parser(
         "serve", help="Start RPC-API server."

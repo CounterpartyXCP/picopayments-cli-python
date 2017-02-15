@@ -376,6 +376,28 @@ def cull(handle=None):
     return culled
 
 
+@dispatcher.add_method
+def cancelpayment(token):
+    """ Cancel queued bu unsynced payment.
+
+    Args:
+        token (str): Token of the queued payment to be canceled.
+
+    Returns:
+        True if payment found and canceled, otherwise False.
+    """
+    data = _load_data()
+    for _handle, connection_data in data["connections"].items():
+        for queued_payment in connection_data["payments_queued"]:
+            if queued_payment["token"] == token:
+                data["connections"][_handle]["payments_queued"].remove(
+                    queued_payment
+                )
+                _save_data(data)
+                return True
+    return False
+
+
 @Request.application
 def _application(request):
     response = JSONRPCResponseManager.handle(request.data, dispatcher)
