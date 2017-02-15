@@ -378,7 +378,7 @@ def cull(handle=None):
 
 @dispatcher.add_method
 def cancelpayment(token):
-    """ Cancel queued bu unsynced payment.
+    """ Cancel queued but unsynced payment.
 
     Args:
         token (str): Token of the queued payment to be canceled.

@@ -467,6 +467,22 @@ Returns
 List of with handles of culled connections.
 
 
+cancelpayment
+=============
+
+Cancel queued but unsynced payment.
+
+Arguments
+---------
+
+ * token (str): Token of the queued payment to be canceled.
+
+Returns
+-------
+
+true if payment found and canceled, otherwise false.
+
+
 serve
 =====
 
