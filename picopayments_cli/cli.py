@@ -82,8 +82,20 @@ def parse(args):
         help="Address for which to get utxos."
     )
     command_parser.add_argument(
-        '--unconfirmed', type=bool, default=False, metavar="BOOL",
+        '--unconfirmed', action='store_true',
         help="Show unconfirmed utxos in result."
+    )
+
+    # get raw transaction
+    command_parser = subparsers.add_parser(
+        "getrawtx", help="Gets raw data for a single transaction."
+    )
+    command_parser.add_argument(
+        'txid', metavar="STR", help="The transaction hash identifier."
+    )
+    command_parser.add_argument(
+        '--verbose', action='store_true',
+        help="Include some additional information in the results."
     )
 
     # blockchain send

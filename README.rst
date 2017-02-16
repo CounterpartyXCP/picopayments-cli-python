@@ -251,6 +251,7 @@ Example
         }
     ]
 
+
 listutxos
 =========
 
@@ -282,6 +283,24 @@ Example
             "vout": 0
         }
     ]
+
+
+getrawtx
+========
+
+Gets raw data for a single transaction.
+
+Arguments
+---------
+
+ * txid (str): The transaction hash identifier.
+ * verbose (bool, default=False): Include some additional information.
+
+Returns
+-------
+
+If found, a raw transaction objects having the same format as the
+bitcoind getrawtransaction API call. If not found, None.
 
 
 blocksend

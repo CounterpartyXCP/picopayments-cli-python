@@ -112,10 +112,35 @@ def searchrawtxs(address, unconfirmed=True):
 
 @dispatcher.add_method
 def listutxos(address, unconfirmed=False):
+    """ List utxos for given address.
+
+    Args:
+        address (str): Address for which to get utxos.
+        unconfirmed (bool): Show unconfirmed utxos in result.
+
+    Returns:
+        A list of dicts with the utxo information.
+    """
     hub_api = _hub_api()
     return hub_api.get_unspent_txouts(
-        address=address, unconfirmed=unconfirmed
+        address=address, unconfirmed=unconfirmed,
     )
+
+
+@dispatcher.add_method
+def getrawtx(txid, verbose=False):
+    """ Gets raw data for a single transaction.
+
+    Args:
+        txid (str): The transaction hash identifier.
+        verbose (bool, default=False): Include some additional information.
+
+    Retruns:
+        If found, a raw transaction objects having the same format as the
+        bitcoind getrawtransaction API call. If not found, None.
+    """
+    hub_api = _hub_api()
+    return hub_api.getrawtransaction(tx_hash=txid, verbose=verbose)
 
 
 @dispatcher.add_method
