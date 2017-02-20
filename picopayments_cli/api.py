@@ -197,6 +197,12 @@ def connect(asset, quantity, expire_time=1024, delay_time=2):
         }
     """
 
+    # check if funds available
+    _status = status()
+    _quantity = _status["wallet"]["balances"].get(asset, 0)
+    err_msg = "Insufficient {0}: {1} required, {2} available!"
+    assert _quantity > quantity, err_msg.format(asset, quantity, _quantity)
+
     # connect to hub
     client = Mph(_hub_api())
     send_deposit_txid = client.connect(quantity, expire_time=expire_time,
