@@ -103,7 +103,16 @@ def balances(asset=None, address=None):
 
 
 @dispatcher.add_method
-def searchrawtxs(address, unconfirmed=True):
+def searchrawtxs(address, unconfirmed=False):
+    """ Get raw transactions for given address.
+
+    Args:
+        address (str): Address to get raw transactions for.
+        unconfirmed (bool, default=true): Include unconfirmed transactions.
+
+    Returns:
+        A list of dicts with information about the transaction.
+    """
     hub_api = _hub_api()
     return hub_api.search_raw_transactions(
         address=address, unconfirmed=unconfirmed

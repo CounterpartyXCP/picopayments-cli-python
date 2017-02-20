@@ -12,7 +12,7 @@ from picopayments_cli import etc
 
 
 if __name__ == "__main__":
-    kwargs, parser = cli.parse(sys.argv[1:])
+    kwargs, parser = cli.parse_args(sys.argv[1:])
     etc.load(kwargs.pop("basedir"), kwargs.pop("testnet"))
     command = kwargs.pop("command")
     if command is None:
