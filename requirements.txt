@@ -1,4 +1,4 @@
-requests == 2.13.0
+requests == 2.10.0
 pyelliptic == 1.5.7
 json-rpc == 1.10.3
 micropayment-core == 0.4.5
