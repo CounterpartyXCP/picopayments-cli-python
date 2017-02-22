@@ -1,6 +1,4 @@
-requests == 2.12.4
-pycoin == 0.70
-ecdsa == 0.13
+requests == 2.13.0
 pyelliptic == 1.5.7
 json-rpc == 1.10.3
 micropayment-core == 0.4.5
