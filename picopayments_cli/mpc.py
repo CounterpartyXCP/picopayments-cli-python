@@ -77,7 +77,7 @@ class Mpc(object):
                         return unpacked["quantity"], btc
 
                     quantity = -unpacked["quantity"]
-        except Exception:  # FIXME catch specific expected exceptions
+        except Exception:  # TODO catch specific expected exceptions
             pass  # not a counterparty tx
 
         # must count tx outputs - inputs for payer view
@@ -283,9 +283,7 @@ class Mpc(object):
             if not found:
                 return False
 
-        # FIXME check signature
-
-        return True
+        return tx.bad_signature_count() == 0
 
     def finalize_commit(self, get_wif_func, state):
         commit = self.api.mpc_highest_commit(state=state)
@@ -413,7 +411,7 @@ class Mpc(object):
             recv_balance = 0
 
         return {
-            # FIXME get channel tx history
+            # TODO get channel tx history
             "status": status,
             "asset": asset,
             "netcode": netcode,

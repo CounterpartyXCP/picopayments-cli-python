@@ -70,10 +70,7 @@ class JsonRpc(object):
 
     def __getattribute__(self, name):
         props = ["url", "auth_wif", "verify_ssl_cert", "username", "password"]
-        # FIXME only allow test_auth in unit tests
-        auth_methods = [
-            "mph_request", "mph_deposit", "mph_sync", "mph_close"
-        ]
+        auth_methods = ["mph_request", "mph_deposit", "mph_sync", "mph_close"]
 
         if name in props:
             return object.__getattribute__(self, name)

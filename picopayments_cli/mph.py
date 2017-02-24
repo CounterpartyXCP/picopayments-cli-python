@@ -20,7 +20,7 @@ class Mph(Mpc):
         "channel_terms",  # set once
         "client_pubkey",  # set once
         "hub_pubkey",  # set once
-        "secrets",  # FIXME save elsewhere?
+        "secrets",  # TODO save elsewhere?
         "c2h_state",  # mutable
         "c2h_spend_secret_hash",  # set once
         "c2h_commit_delay_time",  # set once
@@ -73,7 +73,7 @@ class Mph(Mpc):
 
     def _history_add_rawtx(self, rawtx, action, wallet_tx=True):
         address = None
-        if wallet_tx:  # FIXME deduce from input/output addresses
+        if wallet_tx:  # TODO deduce from input/output addresses
             address = keys.address_from_wif(self.api.auth_wif)
         asset_quantity, btc_quantity = self.get_transferred(
             rawtx, asset=self.asset, address=address
@@ -306,7 +306,8 @@ class Mph(Mpc):
         return True
 
     def _get_wif(self, pubkey):
-        # FIXME assert pubkey matches auth wif
+        apk = keys.pubkey_from_wif(self.api.auth_wif)
+        assert apk == pubkey, "Auth pubkey {0} != {1}!".format(apk, pubkey)
         return self.api.auth_wif
 
     def _add_to_commits_requested(self, secret_hash):
