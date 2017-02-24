@@ -236,7 +236,7 @@ def queuepayment(source, destination, quantity, token=None):
     hub_api = _hub_api()
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][source])
-    # FIXME check dest can receive payment
+    # TODO check dest can receive payment
     result = client.micro_send(destination, quantity, token=token)
     data["connections"][source] = client.serialize()
     _save_data(data)
@@ -369,7 +369,8 @@ def close(handle):
     data = _load_data()
     client = Mph.deserialize(hub_api, data["connections"][handle])
     commit_txid = client.close()
-    # FIXME recover now if possible
+    # TODO flag as closed in case hub delays close
+    # TODO recover now if possible
     data["connections"][handle] = client.serialize()
     _save_data(data)
     return commit_txid
@@ -385,11 +386,14 @@ def history(handle=None):
     Returns:
         List of previous actions made.
     """
-    # FIXME limit to handle if given
+    entries = []
     if os.path.exists(etc.history_path):
         with open(etc.history_path, 'r') as csvfile:
-            return list(csv.DictReader(csvfile))
-    return []
+            for entrie in list(csv.DictReader(csvfile)):
+                if handle is not None and entrie["handle"] != handle:
+                    continue
+                entries.append(entrie)
+    return entries
 
 
 @dispatcher.add_method

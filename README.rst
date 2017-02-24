@@ -5,11 +5,11 @@ PicoPayments CLI
 |BuildLink|_ |CoverageLink|_ |LicenseLink|_ |IssuesLink|_
 
 
-.. |BuildLink| image:: https://travis-ci.org/StorjRND/picopayments-cli-python.svg
-.. _BuildLink: https://travis-ci.org/StorjRND/picopayments-cli-python
+.. |BuildLink| image:: https://travis-ci.org/F483/picopayments-cli-python.svg
+.. _BuildLink: https://travis-ci.org/F483/picopayments-cli-python
 
-.. |CoverageLink| image:: https://coveralls.io/repos/StorjRND/picopayments-cli-python/badge.svg
-.. _CoverageLink: https://coveralls.io/r/StorjRND/picopayments-cli-python
+.. |CoverageLink| image:: https://coveralls.io/repos/F483/picopayments-cli-python/badge.svg
+.. _CoverageLink: https://coveralls.io/r/F483/picopayments-cli-python
 
 .. |LicenseLink| image:: https://img.shields.io/badge/license-MIT-blue.svg
 .. _LicenseLink: https://raw.githubusercontent.com/F483/picopayments-cli-python/master/LICENSE
