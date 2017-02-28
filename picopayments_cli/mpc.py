@@ -49,12 +49,15 @@ class Mpc(object):
     def _btc_transferred(self, rawtx, address):
 
         netcode = keys.netcode_from_address(address)
-        tx = util.load_tx(self.get_rawtx, rawtx)
+        tx = util.load_tx(self.get_rawtxs, rawtx)
 
         total = 0
         for tx_out in tx.txs_out:
-            if tx_out.bitcoin_address(netcode=netcode) == address:
-                total += tx_out.coin_value
+            try:
+                if tx_out.bitcoin_address(netcode=netcode) == address:
+                    total += tx_out.coin_value
+            except Exception:
+                pass  # XXX work around pycoin bug
         if not tx.is_coinbase():
             for tx_out in tx.unspents:
                 if tx_out.bitcoin_address(netcode=netcode) == address:
@@ -83,9 +86,9 @@ class Mpc(object):
         # must count tx outputs - inputs for payer view
         return quantity, self._btc_transferred(rawtx, address)
 
-    def get_rawtx(self, txid):
+    def get_rawtxs(self, txids):
         """TODO doc string"""
-        return self.api.getrawtransaction(tx_hash=txid)
+        return self.api.getrawtransaction_batch(txhash_list=txids)
 
     def address_in_use(self, address):
         for asset, quantity in self.get_balances(address).items():
@@ -138,7 +141,7 @@ class Mpc(object):
     def sign(self, unsigned_rawtx, wif):
         """TODO doc string"""
 
-        return scripts.sign_deposit(self.get_rawtx, wif, unsigned_rawtx)
+        return scripts.sign_deposit(self.get_rawtxs, wif, unsigned_rawtx)
 
     def publish(self, rawtx):
         return self.api.sendrawtransaction(tx_hex=rawtx)
@@ -158,7 +161,7 @@ class Mpc(object):
 
         # sign commit
         signed_rawtx = scripts.sign_created_commit(
-            self.get_rawtx, wif, unsigned_rawtx, deposit_script_hex
+            self.get_rawtxs, wif, unsigned_rawtx, deposit_script_hex
         )
 
         # replace unsigned rawtx of state commit with signed rawtx
@@ -227,7 +230,7 @@ class Mpc(object):
         spend_secret_hash = scripts.get_commit_spend_secret_hash(commit_script)
         spend_secret = get_secret_func(spend_secret_hash)
         signed_rawtx = scripts.sign_payout_recover(
-            self.get_rawtx, wif, payout_rawtx, commit_script, spend_secret
+            self.get_rawtxs, wif, payout_rawtx, commit_script, spend_secret
         )
         if self.publish(signed_rawtx):
             return signed_rawtx
@@ -238,7 +241,7 @@ class Mpc(object):
         pubkey = scripts.get_commit_payer_pubkey(commit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_revoke_recover(
-            self.get_rawtx, wif, revoke_rawtx, commit_script, revoke_secret
+            self.get_rawtxs, wif, revoke_rawtx, commit_script, revoke_secret
         )
         if self.publish(signed_rawtx):
             return signed_rawtx
@@ -249,7 +252,7 @@ class Mpc(object):
         pubkey = scripts.get_deposit_payer_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_change_recover(
-            self.get_rawtx, wif, change_rawtx, deposit_script, spend_secret
+            self.get_rawtxs, wif, change_rawtx, deposit_script, spend_secret
         )
         if self.publish(signed_rawtx):
             return signed_rawtx
@@ -259,7 +262,7 @@ class Mpc(object):
         pubkey = scripts.get_deposit_payer_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         signed_rawtx = scripts.sign_expire_recover(
-            self.get_rawtx, wif, expire_rawtx, deposit_script
+            self.get_rawtxs, wif, expire_rawtx, deposit_script
         )
         if self.publish(signed_rawtx):
             return signed_rawtx
@@ -268,7 +271,7 @@ class Mpc(object):
     def _can_publish(self, rawtx, deposit_utxos):
 
         # check utxos not spent
-        tx = util.load_tx(self.get_rawtx, rawtx)
+        tx = util.load_tx(self.get_rawtxs, rawtx)
         for tx_in in tx.txs_in:
             if tx_in.is_coinbase():
                 continue
@@ -293,7 +296,7 @@ class Mpc(object):
         pubkey = scripts.get_deposit_payee_pubkey(deposit_script)
         wif = get_wif_func(pubkey=pubkey)
         rawtx = scripts.sign_finalize_commit(
-            self.get_rawtx, wif, commit["rawtx"], deposit_script
+            self.get_rawtxs, wif, commit["rawtx"], deposit_script
         )
 
         netcode = keys.netcode_from_wif(wif)
