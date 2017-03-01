@@ -10,6 +10,7 @@ from micropayment_core import util
 from micropayment_core import keys
 from micropayment_core import scripts
 from picopayments_cli import etc
+from picopayments_cli.rpc import parallel_execute
 
 
 HISTORY_FIELDNAMES = [
@@ -57,7 +58,7 @@ class Mpc(object):
                 if tx_out.bitcoin_address(netcode=netcode) == address:
                     total += tx_out.coin_value
             except Exception:
-                pass  # XXX work around pycoin bug
+                pass  # FIXME remove on next pycoin version
         if not tx.is_coinbase():
             for tx_out in tx.unspents:
                 if tx_out.bitcoin_address(netcode=netcode) == address:
@@ -98,15 +99,18 @@ class Mpc(object):
             return True
         return False
 
-    def get_balances(self, address, assets=None):
+    def get_balances(self, address, assets=None,
+                     asset_balances=None, utxos=None):
         """Get confirmed balances for given assets."""
 
         # get asset balances
-        entries = self.api.get_balances(filters=[
-            {"field": "address", "op": "==", "value": address},
-        ])
+        if asset_balances is None:
+            asset_balances = self.api.get_balances(filters=[
+                {"field": "address", "op": "==", "value": address},
+            ])
+
         result = {}
-        for entrie in entries:
+        for entrie in asset_balances:
             if assets and entrie["asset"] not in assets:
                 continue
             result[entrie["asset"]] = entrie["quantity"]
@@ -118,9 +122,10 @@ class Mpc(object):
 
         # get btc balance
         if assets is None or "BTC" in assets:
-            utxos = self.api.get_unspent_txouts(
-                address=address, unconfirmed=False
-            )
+            if utxos is None:
+                utxos = self.api.get_unspent_txouts(
+                    address=address, unconfirmed=False
+                )
             balance = sum(map(lambda u: util.to_satoshis(u["amount"]), utxos))
             result["BTC"] = balance
 
@@ -361,35 +366,95 @@ class Mpc(object):
         assert(send_state["asset"] == recv_state["asset"])
         asset = send_state["asset"]
 
-        send_ttl = self.api.mpc_deposit_ttl(state=send_state,
-                                            clearance=clearance)
+        # get deposit addresses
         send_script = send_state["deposit_script"]
         send_deposit_expire_time = scripts.get_deposit_expire_time(send_script)
         send_deposit_address = util.script_address(
             send_script, netcode=netcode
         )
-        send_balances = self.get_balances(send_deposit_address, ["BTC", asset])
-        send_deposit = send_balances.get(asset, 0)
-        send_transferred = 0
-        if len(send_state["commits_active"]) > 0:
-            send_transferred = self.api.mpc_transferred_amount(
-                state=send_state
-            )
-
-        recv_ttl = self.api.mpc_deposit_ttl(state=recv_state,
-                                            clearance=clearance)
         recv_script = recv_state["deposit_script"]
         recv_deposit_expire_time = scripts.get_deposit_expire_time(recv_script)
         recv_deposit_address = util.script_address(
             recv_script, netcode=netcode
         )
-        recv_balances = self.get_balances(recv_deposit_address, ["BTC", asset])
+
+        # parallel hub calls to improve performance
+        results = parallel_execute([
+            {
+                "name": "send_ttl",
+                "func": self.api.mpc_deposit_ttl,
+                "kwargs": dict(state=send_state, clearance=clearance)
+            },
+            {
+                "name": "recv_ttl",
+                "func": self.api.mpc_deposit_ttl,
+                "kwargs": dict(state=recv_state, clearance=clearance)
+            },
+            {
+                "name": "send_commits_published",
+                "func": self.api.mpc_published_commits,
+                "kwargs": dict(state=send_state)
+            },
+            {
+                "name": "send_transferred",
+                "func": self.api.mpc_transferred_amount,
+                "kwargs": dict(state=send_state)
+            },
+            {
+                "name": "recv_transferred",
+                "func": self.api.mpc_transferred_amount,
+                "kwargs": dict(state=recv_state)
+            },
+            {
+                "name": "send_deposit_asset_balances",
+                "func": self.api.get_balances,
+                "kwargs": dict(filters=[{
+                    "field": "address", "op": "==",
+                    "value": send_deposit_address
+                }])
+            },
+            {
+                "name": "recv_deposit_asset_balances",
+                "func": self.api.get_balances,
+                "kwargs": dict(filters=[{
+                    "field": "address", "op": "==",
+                    "value": recv_deposit_address
+                }])
+            },
+            {
+                "name": "recv_deposit_utxos",
+                "func": self.api.get_unspent_txouts,
+                "kwargs": dict(address=recv_deposit_address, unconfirmed=False)
+            },
+            {
+                "name": "send_deposit_utxos",
+                "func": self.api.get_unspent_txouts,
+                "kwargs": dict(address=send_deposit_address, unconfirmed=False)
+            }
+        ])
+        send_ttl = results["send_ttl"]
+        recv_ttl = results["recv_ttl"]
+        send_commits_published = results["send_commits_published"]
+        send_transferred = results["send_transferred"]
+        recv_transferred = results["recv_transferred"]
+        recv_deposit_asset_balances = results["recv_deposit_asset_balances"]
+        send_deposit_asset_balances = results["send_deposit_asset_balances"]
+        recv_deposit_utxos = results["recv_deposit_utxos"]
+        send_deposit_utxos = results["send_deposit_utxos"]
+
+        send_balances = self.get_balances(
+            send_deposit_address, ["BTC", asset],
+            asset_balances=send_deposit_asset_balances,
+            utxos=send_deposit_utxos
+        )
+        send_deposit = send_balances.get(asset, 0)
+
+        recv_balances = self.get_balances(
+            recv_deposit_address, ["BTC", asset],
+            asset_balances=recv_deposit_asset_balances,
+            utxos=recv_deposit_utxos
+        )
         recv_deposit = recv_balances.get(asset, 0)
-        recv_transferred = 0
-        if len(recv_state["commits_active"]) > 0:
-            recv_transferred = self.api.mpc_transferred_amount(
-                state=recv_state
-            )
 
         send_balance = send_deposit + recv_transferred - send_transferred
         recv_balance = recv_deposit + send_transferred - recv_transferred
@@ -404,9 +469,6 @@ class Mpc(object):
             status = "open"
         send_secret_hash = scripts.get_deposit_spend_secret_hash(send_script)
         send_secret = get_secret_func(send_secret_hash)
-        send_commits_published = self.api.mpc_published_commits(
-            state=send_state
-        )
         expired = ttl == 0  # None explicitly ignore as channel opening
         if expired or send_secret or send_commits_published:
             status = "closed"

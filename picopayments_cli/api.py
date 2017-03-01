@@ -11,6 +11,7 @@ from picopayments_cli import etc
 from picopayments_cli import __version__
 from micropayment_core import keys
 from picopayments_cli.mpc import Mpc
+from picopayments_cli.rpc import parallel_execute
 
 
 @dispatcher.add_method
@@ -272,30 +273,37 @@ def status(handle=None, verbose=False):
     """
     data = _load_data()
     hub_api = _hub_api()
-    result = {
-        "connections": {},
-        "wallet": {
-            "address": keys.address_from_wif(_load_wif()),
-            "balances": balances()
-        }
-    }
+    jobs = [dict(name="balances", func=balances)]
     for _handle, connection_data in data["connections"].items():
         if handle is not None and _handle != handle:
             continue
-        client = Mph.deserialize(hub_api, connection_data)
-        status = client.get_status()
-        if verbose:
-            status["data"] = connection_data
-            result["connections"][_handle] = status
-        else:
-            result["connections"][_handle] = {
-                "asset": status["asset"],
-                "balance": status["balance"],
-                "ttl": status["ttl"],
-                "status": status["status"],
-                "payments_queued": connection_data["payments_queued"]
-            }
-    return result
+        jobs.append(dict(name=_handle, func=_status, args=[
+            hub_api, _handle, connection_data, verbose
+        ]))
+    results = parallel_execute(jobs)
+    _balances = results.pop("balances")
+    return {
+        "connections": results,
+        "wallet": {
+            "address": keys.address_from_wif(_load_wif()),
+            "balances": _balances
+        }
+    }
+
+
+def _status(hub_api, handle, connection_data, verbose):
+    client = Mph.deserialize(hub_api, connection_data)
+    status = client.get_status()
+    if verbose:
+        status["data"] = connection_data
+        return status
+    return {
+        "asset": status["asset"],
+        "balance": status["balance"],
+        "ttl": status["ttl"],
+        "status": status["status"],
+        "payments_queued": connection_data["payments_queued"]
+    }
 
 
 @dispatcher.add_method

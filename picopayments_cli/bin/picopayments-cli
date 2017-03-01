@@ -21,3 +21,8 @@ if __name__ == "__main__":
         result = api.__getattribute__(command)(**kwargs)
         if result is not None:
             print(json.dumps(result, indent=4, sort_keys=True))
+
+    # from picopayments_cli import rpc
+    # calltime = rpc.method_cumulative_calltime
+    # print("method_calltime_cumulative", json.dumps(calltime, indent=2))
+    # print("method_calltime_total", sum(list(calltime.values())))

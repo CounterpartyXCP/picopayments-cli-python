@@ -81,9 +81,6 @@ test: setup
 	$(PEP8) tests
 	# $(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_cli -vv --capture=no --pdb tests/standard_usage_test.py::test_standard_usage
 	$(PYTEST) --ignore=env --verbose --cov-config=.coveragerc --cov-report=term-missing --cov=./picopayments_cli -vv
-	# $(COVERAGE) run --source=picopayments_cli setup.py test
-	# $(COVERAGE) html
-	# $(COVERAGE) report --fail-under=90
 
 
 publish: test
