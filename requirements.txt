@@ -1,5 +1,6 @@
 requests == 2.10.0
 pyelliptic == 1.5.7
 json-rpc == 1.10.3
+future == 0.16.0
 micropayment-core == 1.0.0
 Werkzeug == 0.11.15

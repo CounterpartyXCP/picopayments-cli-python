@@ -3,9 +3,11 @@
 # License: MIT (see LICENSE file)
 
 
+import os
 import copy
 import json
 from micropayment_core import keys
+from picopayments_cli import etc
 
 
 class AuthPubkeyMissmatch(Exception):
@@ -43,3 +45,14 @@ def verify_json(json_data):
     signature = json_data.pop("signature")
     data = json.dumps(json_data, sort_keys=True)
     return keys.verify_sha256(pubkey, signature, data.encode("utf-8"))
+
+
+def load_wif():
+    if not os.path.exists(etc.wallet_path):
+        wif = keys.generate_wif(etc.netcode)
+        with open(etc.wallet_path, 'w') as outfile:
+            outfile.write(wif)
+    else:
+        with open(etc.wallet_path, 'r', encoding="utf-8") as infile:
+            wif = infile.read().strip()
+    return wif

@@ -5,6 +5,7 @@ import csv
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 from jsonrpc import JSONRPCResponseManager, dispatcher
+from picopayments_cli.auth import load_wif
 from picopayments_cli.rpc import JsonRpc
 from picopayments_cli.mph import Mph
 from picopayments_cli import etc
@@ -98,7 +99,7 @@ def balances(asset=None, address=None):
     hub_api = _hub_api()
     assets = [asset] if asset else None
     if address is None:
-        address = keys.address_from_wif(_load_wif())
+        address = keys.address_from_wif(load_wif())
     return Mpc(hub_api).get_balances(address, assets=assets)
 
 
@@ -167,7 +168,7 @@ def blocksend(asset, destination, quantity, extra_btc=0):
     """
     hub_api = _hub_api()
     kwargs = dict(
-        source=_load_wif(),
+        source=load_wif(),
         destination=destination,
         asset=asset,
         quantity=int(quantity)
@@ -275,7 +276,7 @@ def status(handle=None, verbose=False):
     result = {
         "connections": {},
         "wallet": {
-            "address": keys.address_from_wif(_load_wif()),
+            "address": keys.address_from_wif(load_wif()),
             "balances": balances()
         }
     }
@@ -450,21 +451,10 @@ def _application(request):
 
 def _hub_api():
     return JsonRpc(
-        etc.hub_url, auth_wif=_load_wif(),
+        etc.hub_url, auth_wif=load_wif(),
         username=etc.hub_username, password=etc.hub_password,
         verify_ssl_cert=etc.hub_verify_ssl_cert
     )
-
-
-def _load_wif():
-    if not os.path.exists(etc.wallet_path):
-        wif = keys.generate_wif(etc.netcode)
-        with open(etc.wallet_path, 'w') as outfile:
-            outfile.write(wif)
-    else:
-        with open(etc.wallet_path, 'r', encoding="utf-8") as infile:
-            wif = infile.read().strip()
-    return wif
 
 
 def _load_data():
