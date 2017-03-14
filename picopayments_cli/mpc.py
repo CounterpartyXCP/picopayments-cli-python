@@ -322,7 +322,8 @@ class Mpc(object):
             "revoke": {},  # {"txid": "rawtx"}
             "change": {},  # {"txid": "rawtx"}
             "expire": {},  # {"txid": "rawtx"}
-            "commit": {}   # {"txid": "rawtx"}
+            "commit": {},  # {"txid": "rawtx"}
+            "deposit": {},  # {"txid": "rawtx"}
         }
 
         # get payouts
