@@ -124,6 +124,29 @@ class Mpc(object):
             balance = sum(map(lambda u: util.to_satoshis(u["amount"]), utxos))
             result["BTC"] = balance
 
+        # deduct unconfirmed sends
+        if assets is not None:
+            sends = self.get_unconfirmed_send_amounts(address, assets)
+            for send_asset, send_amount in sends.items():
+                result[send_asset] -= send_amount
+
+        return result
+
+    def get_unconfirmed_send_amounts(self, address, assets):
+
+        result = {}
+        transactions = self.api.search_raw_transactions(address=address,
+                                                        unconfirmed=True)
+        for transaction in transactions:
+            if transaction.get("confirmations", 0) != 0:
+                continue  # ignore confirmed
+            for asset in assets:
+                asset_quantity, btc_quantity = self.get_transferred(
+                    transaction["hex"], asset=asset, address=address
+                )
+                if asset_quantity < 0:
+                    result[asset] = result.get(asset, 0) - asset_quantity
+
         return result
 
     def block_send(self, **kwargs):
