@@ -5,17 +5,17 @@ PicoPayments CLI
 |BuildLink|_ |CoverageLink|_ |LicenseLink|_ |IssuesLink|_
 
 
-.. |BuildLink| image:: https://travis-ci.org/F483/picopayments-cli-python.svg
-.. _BuildLink: https://travis-ci.org/F483/picopayments-cli-python
+.. |BuildLink| image:: https://travis-ci.org/CounterpartyXCP/picopayments-cli-python.svg
+.. _BuildLink: https://travis-ci.org/CounterpartyXCP/picopayments-cli-python
 
-.. |CoverageLink| image:: https://coveralls.io/repos/F483/picopayments-cli-python/badge.svg
-.. _CoverageLink: https://coveralls.io/r/F483/picopayments-cli-python
+.. |CoverageLink| image:: https://coveralls.io/repos/CounterpartyXCP/picopayments-cli-python/badge.svg
+.. _CoverageLink: https://coveralls.io/r/CounterpartyXCP/picopayments-cli-python
 
 .. |LicenseLink| image:: https://img.shields.io/badge/license-MIT-blue.svg
-.. _LicenseLink: https://raw.githubusercontent.com/F483/picopayments-cli-python/master/LICENSE
+.. _LicenseLink: https://raw.githubusercontent.com/CounterpartyXCP/picopayments-cli-python/master/LICENSE
 
-.. |IssuesLink| image:: https://img.shields.io/github/issues/F483/picopayments-cli-python.svg
-.. _IssuesLink: https://github.com/F483/picopayments-cli-python/issues
+.. |IssuesLink| image:: https://img.shields.io/github/issues/CounterpartyXCP/picopayments-cli-python.svg
+.. _IssuesLink: https://github.com/CounterpartyXCP/picopayments-cli-python/issues
 
 
 Micropayment hub CLI interface for counterparty assets.

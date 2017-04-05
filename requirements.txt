@@ -1,6 +1,7 @@
-requests == 2.10.0
-pyelliptic == 1.5.7
-json-rpc == 1.10.3
-future == 0.16.0
-micropayment-core == 1.0.1
-Werkzeug == 0.11.15
+requests >= 2.10.0
+appdirs >= 1.4.3
+pyelliptic >= 1.5.7
+json-rpc >= 1.10.3
+future >= 0.16.0
+micropayment-core >= 1.0.1
+Werkzeug >= 0.11.15

@@ -3,8 +3,6 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-  # "2.7"
-  # "pypy"
 
 install:
   - pip3 install -r requirements.txt
@@ -18,5 +16,5 @@ after_success:
   - coveralls
 
 notifications:
-  slack: storjcommunity:TZfUO9ycY8R9UYwztWZTo0jk
-  email: false
+  slack: 
+    secure: cl0G5fWZNnIK5VQ6BPZ4RtwVO2/nfvX/zjhljfF6cQ20OKyvyiJHq+e67fl2pkCKDlqlEqSWaQJ6G52YzUpDQmf+o7qpH6YnkFxSqYp5h4YF1hJw4sCHJ7bVSLrjogWxU8QaNvH7YpL4YkGe+WOau2FgoIZOcMt6hhKrvWclfuc=
